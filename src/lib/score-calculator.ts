@@ -4,10 +4,16 @@ import { z } from "zod";
 // Zod schemas for validation and type-safe parsing of JSON fields
 export const OfficialInspectionScoresSchema = z.object({
   cleanliness: z.number().min(0).max(20),
-  wasteManagement: z.number().min(0).max(20),
-  safety: z.number().min(0).max(20),
-  hygiene: z.number().min(0).max(20),
-  sustainability: z.number().min(0).max(20),
+  landscape: z.number().min(0).max(10),
+  wasteDisposal: z.number().min(0).max(10),
+  restrooms: z.number().min(0).max(10),
+  infrastructure: z.number().min(0).max(10),
+  sustainability: z.number().min(0).max(10),
+  drainage: z.number().min(0).max(10),
+  behavior: z.number().min(0).max(5),
+  innovation: z.number().min(0).max(5),
+  safety: z.number().min(0).max(5),
+  sanitationExercises: z.number().min(0).max(5),
 });
 
 export type OfficialInspectionScores = z.infer<typeof OfficialInspectionScoresSchema>;
@@ -40,16 +46,21 @@ export function getPerformanceRating(score: number): string {
 
 /**
  * Normalizes an official inspection score out of 100.
- * Max points for each category is 20, total max is 100.
+ * The 11 criteria items sum to exactly 100 points maximum.
  */
 export function normalizeOfficialScore(scores: OfficialInspectionScores): number {
   const sum =
     scores.cleanliness +
-    scores.wasteManagement +
+    scores.landscape +
+    scores.wasteDisposal +
+    scores.restrooms +
+    scores.infrastructure +
+    scores.sustainability +
+    scores.drainage +
+    scores.behavior +
+    scores.innovation +
     scores.safety +
-    scores.hygiene +
-    scores.sustainability;
-  // Since each is max 20, sum is out of 100. So it is already normalized!
+    scores.sanitationExercises;
   return Math.min(100, Math.max(0, sum));
 }
 

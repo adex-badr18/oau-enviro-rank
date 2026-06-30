@@ -64,13 +64,19 @@ async function runTests() {
     year: 2026,
     criteriaScores: {
       cleanliness: 16,        // 16/20
-      wasteManagement: 18,    // 18/20
-      safety: 14,             // 14/20
-      hygiene: 12,            // 12/20
-      sustainability: 15,     // 15/20
+      landscape: 8,           // 8/10
+      wasteDisposal: 8,       // 8/10
+      restrooms: 8,           // 8/10
+      infrastructure: 7,      // 7/10
+      sustainability: 7,      // 7/10
+      drainage: 7,            // 7/10
+      behavior: 4,            // 4/5
+      innovation: 3,          // 3/5
+      safety: 4,              // 4/5
+      sanitationExercises: 3, // 3/5
     },
   };
-  // Expected sum = 16 + 18 + 14 + 12 + 15 = 75 out of 100 (normalized = 75%)
+  // Expected sum = 16 + 8 + 8 + 8 + 7 + 7 + 7 + 4 + 3 + 4 + 3 = 75 out of 100 (normalized = 75%)
   const inspectReq = new NextRequest("http://localhost/api/inspect", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
