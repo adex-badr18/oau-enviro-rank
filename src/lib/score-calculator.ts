@@ -14,9 +14,17 @@ export type OfficialInspectionScores = z.infer<typeof OfficialInspectionScoresSc
 
 export const UserResponseRatingsSchema = z.object({
   cleanliness: z.number().min(1).max(5),
+  landscape: z.number().min(1).max(5).optional(),
   wasteDisposal: z.number().min(1).max(5),
   restrooms: z.number().min(1).max(5),
-  odor: z.number().min(1).max(5),
+  infrastructure: z.number().min(1).max(5).optional(),
+  drainage: z.number().min(1).max(5).optional(),
+  sustainability: z.number().min(1).max(5).optional(),
+  behavior: z.number().min(1).max(5).optional(),
+  sanitationExercises: z.number().min(1).max(5).optional(),
+  safety: z.number().min(1).max(5).optional(),
+  innovation: z.number().min(1).max(5).optional(),
+  odor: z.number().min(1).max(5).optional(),
 });
 
 export type UserResponseRatings = z.infer<typeof UserResponseRatingsSchema>;

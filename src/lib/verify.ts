@@ -2,6 +2,7 @@ import { GET as getFaculties, POST as createFaculty } from "@/app/api/faculties/
 import { PATCH as updateFaculty, DELETE as deleteFaculty } from "@/app/api/faculties/[id]/route";
 import { POST as inspectPOST } from "@/app/api/inspect/route";
 import { POST as votePOST } from "@/app/api/vote/route";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 
 async function runTests() {
@@ -23,7 +24,7 @@ async function runTests() {
     buildingName: "Testing Laboratory Block A",
     description: "A temporary faculty created for integration testing.",
   };
-  const createReq = new Request("http://localhost/api/faculties", {
+  const createReq = new NextRequest("http://localhost/api/faculties", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(createPayload),
@@ -41,7 +42,7 @@ async function runTests() {
   const patchPayload = {
     buildingName: "Testing Laboratory Block B - Updated",
   };
-  const patchReq = new Request(`http://localhost/api/faculties/${facultyId}`, {
+  const patchReq = new NextRequest(`http://localhost/api/faculties/${facultyId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patchPayload),
@@ -70,7 +71,7 @@ async function runTests() {
     },
   };
   // Expected sum = 16 + 18 + 14 + 12 + 15 = 75 out of 100 (normalized = 75%)
-  const inspectReq = new Request("http://localhost/api/inspect", {
+  const inspectReq = new NextRequest("http://localhost/api/inspect", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(inspectPayload),
@@ -105,7 +106,7 @@ async function runTests() {
     },
   };
   // Avg = (4+3+5+4)/4 = 4. Normalized = ((4-1)/4)*100 = 75%
-  const voteReq1 = new Request("http://localhost/api/vote", {
+  const voteReq1 = new NextRequest("http://localhost/api/vote", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(staffVote1Payload),
@@ -133,7 +134,7 @@ async function runTests() {
   };
   // Avg = (5+4+4+3)/4 = 4. Normalized = ((4-1)/4)*100 = 75%
   // Overall Staff average is (75+75)/2 = 75%
-  const voteReq2 = new Request("http://localhost/api/vote", {
+  const voteReq2 = new NextRequest("http://localhost/api/vote", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(staffVote2Payload),
@@ -160,7 +161,7 @@ async function runTests() {
     },
   };
   // Avg = 5. Normalized = ((5-1)/4)*100 = 100%
-  const voteReq3 = new Request("http://localhost/api/vote", {
+  const voteReq3 = new NextRequest("http://localhost/api/vote", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(studentVotePayload),
@@ -193,7 +194,7 @@ async function runTests() {
 
   // 9. Test DELETE /api/faculties/[id] (cascade checking)
   console.log(`\n9. Testing DELETE /api/faculties/${facultyId} (cascade delete)...`);
-  const deleteReq = new Request(`http://localhost/api/faculties/${facultyId}`, {
+  const deleteReq = new NextRequest(`http://localhost/api/faculties/${facultyId}`, {
     method: "DELETE",
   });
   const deleteRes = await deleteFaculty(deleteReq, {
