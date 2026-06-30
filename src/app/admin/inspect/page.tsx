@@ -370,9 +370,9 @@ export default function AdminInspectPage() {
             <img src="/oau-logo.png" alt="OAU Logo" className="h-14 w-14 object-contain shrink-0" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-slate-455 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
+                <span className="text-xs font-black text-slate-455 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
                 <span className="text-slate-300">|</span>
-                <span className="inline-flex items-center gap-1 text-[#fcb900] text-[10px] font-black uppercase tracking-wider">Inspection Panel</span>
+                <span className="inline-flex items-center gap-1 text-[#fcb900] text-xs font-black uppercase tracking-wider">Inspection Panel</span>
               </div>
               <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight mt-0.5">
                 Official Inspection Scorecard
@@ -543,7 +543,7 @@ export default function AdminInspectPage() {
               {/* Running total status */}
               <div className="flex items-center gap-4 shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-2.5 px-4 shadow-sm">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase block leading-none">Running Total</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase block leading-none">Running Total</span>
                   <span className="text-2xl font-black text-[#10386b] dark:text-[#fcb900] mt-1 inline-block">
                     {runningTotal} <span className="text-xs font-semibold text-slate-400">/ 100</span>
                   </span>
@@ -608,7 +608,7 @@ export default function AdminInspectPage() {
                       </div>
                     </div>
                     {errors[item.id] && (
-                      <span className="text-rose-500 text-[10px] font-bold mt-1 block">
+                      <span className="text-rose-500 text-xs font-bold mt-1 block">
                         {errors[item.id]?.message}
                       </span>
                     )}

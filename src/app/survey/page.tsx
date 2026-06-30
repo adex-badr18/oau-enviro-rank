@@ -526,7 +526,7 @@ export default function SurveyPage() {
                           }`}>
                             {opt.label}
                           </p>
-                          <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 leading-snug line-clamp-2">
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-snug">
                             {opt.detail}
                           </p>
                         </div>
@@ -551,12 +551,12 @@ export default function SurveyPage() {
     <div className="flex-1 bg-zinc-50 dark:bg-[#090b10] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center font-sans">
       
       {/* Brand Heading */}
-      <div className="w-full max-w-4xl text-center mb-8 flex flex-col items-center">
+      <div className="w-full max-w-6xl text-center mb-8 flex flex-col items-center">
         <div className="flex items-center gap-3 mb-4 bg-white dark:bg-[#11141e] border border-zinc-200 dark:border-zinc-800 rounded-2xl py-2 px-4 shadow-sm">
           <img src="/oau-logo.png" alt="OAU Logo" className="h-10 w-10 object-contain" />
           <div className="text-left">
             <span className="font-black text-xs uppercase tracking-wide text-brand-navy dark:text-brand-gold block">Obafemi Awolowo University</span>
-            <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-bold block uppercase tracking-widest leading-none mt-0.5">Ile-Ife, Nigeria</span>
+            <span className="text-xs text-zinc-450 dark:text-zinc-400 font-bold block uppercase tracking-widest leading-none mt-0.5">Ile-Ife, Nigeria</span>
           </div>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-navy dark:text-white tracking-tight">
@@ -567,7 +567,7 @@ export default function SurveyPage() {
         </p>
       </div>
 
-      <div className="w-full max-w-4xl bg-white dark:bg-[#11141e] rounded-3xl shadow-xl border border-zinc-150 dark:border-zinc-800/80 overflow-hidden flex flex-col md:flex-row min-h-[580px]">
+      <div className="w-full max-w-6xl bg-white dark:bg-[#11141e] rounded-3xl shadow-xl border border-zinc-150 dark:border-zinc-800/80 overflow-hidden flex flex-col md:flex-row min-h-[580px]">
         
         {/* Left Side: Step Tracker Panel (Desktop sidebar) */}
         <div className="md:w-1/3 bg-brand-navy p-6 md:p-8 text-white flex flex-col justify-between border-r border-brand-navy-light relative overflow-hidden">
@@ -580,7 +580,7 @@ export default function SurveyPage() {
               <img src="/oau-logo.png" alt="OAU Logo" className="h-10 w-10 object-contain bg-white/10 rounded-lg p-1" />
               <div className="text-left">
                 <span className="font-black text-xs uppercase tracking-wider text-brand-gold block">OAU, Ile-Ife</span>
-                <span className="text-[9px] text-slate-350 font-bold block uppercase tracking-widest leading-none mt-0.5">Compliance Poll</span>
+                <span className="text-xs text-slate-300 font-bold block uppercase tracking-widest leading-none mt-0.5">Compliance Poll</span>
               </div>
             </div>
 
@@ -604,7 +604,7 @@ export default function SurveyPage() {
                       <p className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-brand-gold" : isCompleted ? "text-white" : "text-white/40"}`}>
                         {s.desc}
                       </p>
-                      <p className={`text-[10px] font-medium leading-none mt-0.5 ${isActive ? "text-white font-semibold" : "text-white/60"}`}>
+                      <p className={`text-xs font-medium leading-none mt-0.5 ${isActive ? "text-white font-semibold" : "text-white/60"}`}>
                         {s.label}
                       </p>
                     </div>
@@ -615,7 +615,7 @@ export default function SurveyPage() {
 
             {/* Mobile Progress Text */}
             <div className="md:hidden flex flex-col">
-              <span className="text-[10px] uppercase font-bold text-brand-gold tracking-widest">Progress</span>
+              <span className="text-xs uppercase font-bold text-brand-gold tracking-widest">Progress</span>
               <span className="text-xl font-black mt-1">Step {step} of 5</span>
               <span className="text-xs text-white/70 mt-1">{stepsMeta[step - 1].label}</span>
             </div>
@@ -681,7 +681,7 @@ export default function SurveyPage() {
                           </div>
                           <div>
                             <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">Student</p>
-                            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">Enrolled pupil rating</p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Enrolled pupil rating</p>
                           </div>
                         </button>
 
@@ -699,7 +699,7 @@ export default function SurveyPage() {
                           </div>
                           <div>
                             <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">Staff</p>
-                            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">Academic/Non-academic</p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Academic/Non-academic</p>
                           </div>
                         </button>
                       </div>
@@ -779,7 +779,7 @@ export default function SurveyPage() {
                                 <div>
                                   <p className="font-bold">{faculty.name}</p>
                                   {faculty.buildingName && (
-                                    <p className={`text-[10px] mt-0.5 ${selectedFacultyId === faculty.id ? "text-white/70" : "text-zinc-400"}`}>
+                                    <p className={`text-xs mt-0.5 ${selectedFacultyId === faculty.id ? "text-white/70" : "text-zinc-400"}`}>
                                       Building: {faculty.buildingName}
                                     </p>
                                   )}

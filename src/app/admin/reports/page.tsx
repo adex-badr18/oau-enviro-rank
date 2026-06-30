@@ -113,9 +113,9 @@ export default function AdminReportsPage() {
             <img src="/oau-logo.png" alt="OAU Logo" className="h-14 w-14 object-contain shrink-0" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-slate-455 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
+                <span className="text-xs font-black text-slate-455 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
                 <span className="text-slate-300">|</span>
-                <span className="inline-flex items-center gap-1 text-[#fcb900] text-[10px] font-black uppercase tracking-wider">Reporting Suite</span>
+                <span className="inline-flex items-center gap-1 text-[#fcb900] text-xs font-black uppercase tracking-wider">Reporting Suite</span>
               </div>
               <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight mt-0.5">
                 Spreadsheet Report Generator

@@ -147,7 +147,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
               <img src="/oau-logo.png" alt="OAU Logo" className="h-12 w-12 object-contain" />
               <div className="text-left">
                 <p className="text-xs font-black tracking-wide text-brand-gold uppercase">Obafemi Awolowo University</p>
-                <p className="text-[10px] font-bold text-slate-350 uppercase tracking-widest leading-none mt-0.5">Ile-Ife, Nigeria</p>
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-widest leading-none mt-0.5">Ile-Ife, Nigeria</p>
               </div>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-none text-white">
@@ -243,11 +243,11 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
           {/* Card 1: Campus average */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex items-center justify-between transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-705">
             <div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Campus Average</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Campus Average</span>
               <span className="text-3xl font-black text-brand-navy dark:text-[#fcb900] block mt-1.5">
                 {stats.campusAverage}%
               </span>
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-1">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-1.5">
                 Weighted compliance rate
               </span>
             </div>
@@ -259,11 +259,11 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
           {/* Card 2: Total participating faculties */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex items-center justify-between transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-705">
             <div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Monitored Faculties</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Monitored Faculties</span>
               <span className="text-3xl font-black text-brand-navy dark:text-[#fcb900] block mt-1.5">
                 {stats.totalFaculties}
               </span>
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-1">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-1.5">
                 Active campus environments
               </span>
             </div>
@@ -275,11 +275,11 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
           {/* Card 3: Total inspections */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex items-center justify-between transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-705">
             <div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Official Inspections</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Official Inspections</span>
               <span className="text-3xl font-black text-brand-navy dark:text-[#fcb900] block mt-1.5">
                 {stats.totalInspections} <span className="text-xs font-semibold text-slate-400">/ {stats.totalFaculties}</span>
               </span>
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-1">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-1.5">
                 Committee audits logged
               </span>
             </div>
@@ -291,11 +291,11 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
           {/* Card 4: Total votes */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex items-center justify-between transition-all duration-200 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-705">
             <div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Voter Feedback</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Voter Feedback</span>
               <span className="text-3xl font-black text-brand-navy dark:text-[#fcb900] block mt-1.5">
                 {stats.totalVotes.toLocaleString()}
               </span>
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-1">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-1.5">
                 {stats.totalStudentVotes} students | {stats.totalStaffVotes} staff
               </span>
             </div>
@@ -330,7 +330,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                   <div className="text-center px-4 mb-4">
                     <p className="text-sm font-extrabold text-[#10386b] dark:text-white line-clamp-1">{topThree[1].name}</p>
                     <p className="text-2xl font-black text-slate-650 mt-1">{topThree[1].currentScore}%</p>
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border mt-1.5 ${getRatingBadgeClass(topThree[1].rating)}`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-bold border mt-1.5 ${getRatingBadgeClass(topThree[1].rating)}`}>
                       {topThree[1].rating}
                     </span>
                   </div>
@@ -355,7 +355,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                   <div className="text-center px-4 mb-4">
                     <p className="text-base font-black text-brand-navy dark:text-white line-clamp-1">{topThree[0].name}</p>
                     <p className="text-3xl font-black text-brand-gold mt-1">{topThree[0].currentScore}%</p>
-                    <span className={`inline-flex px-3.5 py-1 rounded-full text-[11px] font-black border mt-1.5 ${getRatingBadgeClass(topThree[0].rating)}`}>
+                    <span className={`inline-flex px-3.5 py-1 rounded-full text-xs font-black border mt-1.5 ${getRatingBadgeClass(topThree[0].rating)}`}>
                       {topThree[0].rating}
                     </span>
                   </div>
@@ -376,7 +376,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                   <div className="text-center px-4 mb-4">
                     <p className="text-sm font-extrabold text-[#10386b] dark:text-white line-clamp-1">{topThree[2].name}</p>
                     <p className="text-2xl font-black text-amber-700 dark:text-amber-500 mt-1">{topThree[2].currentScore}%</p>
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border mt-1.5 ${getRatingBadgeClass(topThree[2].rating)}`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-bold border mt-1.5 ${getRatingBadgeClass(topThree[2].rating)}`}>
                       {topThree[2].rating}
                     </span>
                   </div>
@@ -427,12 +427,12 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-250/80 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/10">
-                    <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-20 text-center">Rank</th>
-                    <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Faculty Details</th>
-                    <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Building Location</th>
-                    <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right w-44">Weighted score bar</th>
-                    <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right w-24">Score</th>
-                    <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center w-28">Rating</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider w-20 text-center">Rank</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Faculty Details</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Building Location</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-44">Weighted score bar</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24">Score</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-center w-28">Rating</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800/60">
@@ -468,7 +468,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                             {row.name}
                           </p>
                           {row.description && (
-                            <p className="text-[11px] text-slate-450 dark:text-slate-500 line-clamp-1 mt-1 leading-snug">
+                            <p className="text-xs text-slate-450 dark:text-slate-500 line-clamp-1 mt-1 leading-snug">
                               {row.description}
                             </p>
                           )}
@@ -542,7 +542,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
           {/* Decors */}
           <div className="absolute right-0 bottom-0 h-48 w-48 rounded-full bg-brand-gold/5 blur-2xl pointer-events-none" />
 
-          <div className="max-w-3xl relative z-10 flex flex-col gap-6">
+          <div className="w-full relative z-10 flex flex-col gap-6">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-gold/15 text-brand-gold text-xs font-bold uppercase tracking-wider self-start">
               Compliance Framework
             </div>
@@ -554,26 +554,26 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-              <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+              <div className="p-6 sm:p-8 rounded-2xl bg-white/5 border border-white/10">
                 <span className="text-2xl font-black text-brand-gold block">70%</span>
                 <span className="text-xs font-extrabold uppercase block mt-1">Official Committee Audit</span>
-                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed font-medium">
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed font-medium">
                   Direct physical inspections conducted by the Senate-appointed Inspection Committee, analyzing structural maintenance, conveniencies, and litter control.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+              <div className="p-6 sm:p-8 rounded-2xl bg-white/5 border border-white/10">
                 <span className="text-2xl font-black text-brand-gold block">20%</span>
                 <span className="text-xs font-extrabold uppercase block mt-1">Staff Opinion Poll</span>
-                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed font-medium">
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed font-medium">
                   Direct hygiene ratings submitted by academic and non-academic staff members, evaluating their work environments.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+              <div className="p-6 sm:p-8 rounded-2xl bg-white/5 border border-white/10">
                 <span className="text-2xl font-black text-brand-gold block">10%</span>
                 <span className="text-xs font-extrabold uppercase block mt-1">Student Feedback</span>
-                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed font-medium">
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed font-medium">
                   Survey feedback logged by enrolled students sharing experiences regarding restroom sanitation, campus landscaping, and waste disposal.
                 </p>
               </div>
@@ -591,7 +591,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
               <span className="font-extrabold uppercase tracking-wider text-slate-300 block">
                 Obafemi Awolowo University, Ile-Ife
               </span>
-              <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider leading-none mt-0.5">
+              <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider leading-none mt-1">
                 Environmental Compliance & Cleanliness Index
               </span>
             </div>
