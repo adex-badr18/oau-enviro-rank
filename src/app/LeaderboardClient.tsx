@@ -143,9 +143,12 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
 
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
           <div className="flex-1 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/15 text-brand-gold text-xs font-extrabold uppercase tracking-widest mb-4">
-              <Sparkles className="h-3.5 w-3.5" />
-              Obafemi Awolowo University Campus Initiative
+            <div className="flex flex-col sm:flex-row items-center gap-3 mb-6 bg-white/5 border border-white/10 rounded-2xl p-3.5 inline-flex align-middle backdrop-blur-sm">
+              <img src="/oau-logo.png" alt="OAU Logo" className="h-12 w-12 object-contain" />
+              <div className="text-left">
+                <p className="text-xs font-black tracking-wide text-brand-gold uppercase">Obafemi Awolowo University</p>
+                <p className="text-[10px] font-bold text-slate-350 uppercase tracking-widest leading-none mt-0.5">Ile-Ife, Nigeria</p>
+              </div>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-none text-white">
               Environmental Compliance <br className="hidden sm:inline" />
@@ -582,11 +585,16 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
       {/* Footer */}
       <footer className="mt-auto bg-slate-900 text-slate-400 py-10 px-4 border-t border-slate-950/40 text-xs">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-brand-gold" />
-            <span className="font-extrabold uppercase tracking-wider text-slate-300">
-              OAU Environmental Rank
-            </span>
+          <div className="flex items-center gap-3">
+            <img src="/oau-logo.png" alt="OAU Logo" className="h-9 w-9 object-contain" />
+            <div className="text-left">
+              <span className="font-extrabold uppercase tracking-wider text-slate-300 block">
+                Obafemi Awolowo University, Ile-Ife
+              </span>
+              <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider leading-none mt-0.5">
+                Environmental Compliance & Cleanliness Index
+              </span>
+            </div>
           </div>
 
           <p className="font-medium text-center md:text-right">
