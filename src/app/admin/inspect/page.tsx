@@ -365,20 +365,24 @@ export default function AdminInspectPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-4xl mx-auto">
         {/* Navigation / Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fcb900]/10 text-yellow-800 dark:text-[#fcb900] text-xs font-extrabold uppercase tracking-wider mb-2">
-              <ClipboardCheck className="h-3.5 w-3.5" />
-              Inspection Panel
-            </div>
-            <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight">
-              Official Inspection Scorecard
-            </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
+          <div className="flex items-center gap-4">
+            <img src="/oau-logo.png" alt="OAU Logo" className="h-14 w-14 object-contain shrink-0" />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black text-slate-455 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
+                <span className="text-slate-300">|</span>
+                <span className="inline-flex items-center gap-1 text-[#fcb900] text-[10px] font-black uppercase tracking-wider">Inspection Panel</span>
+              </div>
+              <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight mt-0.5">
+                Official Inspection Scorecard
+              </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Submit environmental audit scores evaluated by the Inspection Committee.
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 flex gap-3">
+        </div>
+        <div className="mt-4 sm:mt-0 flex gap-3">
             <a
               href="/admin/reports"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200"

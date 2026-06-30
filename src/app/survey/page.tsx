@@ -551,10 +551,13 @@ export default function SurveyPage() {
     <div className="flex-1 bg-zinc-50 dark:bg-[#090b10] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center font-sans">
       
       {/* Brand Heading */}
-      <div className="w-full max-w-4xl text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 text-brand-gold-dark dark:text-brand-gold text-xs font-bold uppercase tracking-wider mb-3">
-          <Sparkles className="h-3.5 w-3.5" />
-          OAU Environmental Rank
+      <div className="w-full max-w-4xl text-center mb-8 flex flex-col items-center">
+        <div className="flex items-center gap-3 mb-4 bg-white dark:bg-[#11141e] border border-zinc-200 dark:border-zinc-800 rounded-2xl py-2 px-4 shadow-sm">
+          <img src="/oau-logo.png" alt="OAU Logo" className="h-10 w-10 object-contain" />
+          <div className="text-left">
+            <span className="font-black text-xs uppercase tracking-wide text-brand-navy dark:text-brand-gold block">Obafemi Awolowo University</span>
+            <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-bold block uppercase tracking-widest leading-none mt-0.5">Ile-Ife, Nigeria</span>
+          </div>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-navy dark:text-white tracking-tight">
           Cleanliness & Compliance Survey
@@ -573,9 +576,12 @@ export default function SurveyPage() {
           <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/5 blur-xl pointer-events-none" />
           
           <div>
-            <div className="flex items-center gap-2 mb-6">
-              <Building2 className="h-6 w-6 text-brand-gold" />
-              <span className="font-extrabold text-sm uppercase tracking-widest text-brand-gold">OAU Brand</span>
+            <div className="flex items-center gap-3 mb-8 bg-white/5 border border-white/10 rounded-2xl p-2.5">
+              <img src="/oau-logo.png" alt="OAU Logo" className="h-10 w-10 object-contain bg-white/10 rounded-lg p-1" />
+              <div className="text-left">
+                <span className="font-black text-xs uppercase tracking-wider text-brand-gold block">OAU, Ile-Ife</span>
+                <span className="text-[9px] text-slate-350 font-bold block uppercase tracking-widest leading-none mt-0.5">Compliance Poll</span>
+              </div>
             </div>
 
             <div className="hidden md:flex flex-col gap-6 relative">
