@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, AssessmentPeriod } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import {
   calculateWeightedScore,
   getPerformanceRating,
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const startVal = startYear * 12 + (startMonth - 1);
     const endVal = endYear * 12 + (endMonth - 1);
 
-    const activePeriods = allPeriods.filter((p: AssessmentPeriod) => {
+    const activePeriods = allPeriods.filter((p: { year: number; month: number }) => {
       const val = p.year * 12 + (p.month - 1);
       return val >= startVal && val <= endVal;
     });
