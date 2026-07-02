@@ -1,18 +1,18 @@
 # Production Deployment Guide: OAU Enviro Rank
 
-This document outlines the Solutions Architecture and DevOps steps to transition the OAU Environmental Compliance and Cleanliness Assessment System from local development (SQLite) into a production-grade serverless environment utilizing **Supabase (Managed PostgreSQL)** and cloud providers (**Vercel**, **Railway**, or **Render**).
+This document outlines the Solutions Architecture and DevOps steps to transition the OAU Environmental Compliance and Cleanliness Assessment System from local development (SQLite) into a production-grade containerized environment utilizing **Supabase (Managed PostgreSQL)** and **Google Cloud Run**.
 
 ---
 
 ## 1. Environment Variables Checklist
 
-Ensure these variables are configured in your cloud hosting provider dashboard:
+Ensure these variables are configured in your Cloud Run service settings:
 
 | Variable | Description | Example / Format |
 | :--- | :--- | :--- |
 | `DATABASE_URL` | Connection pooling string for Supabase database (transaction mode). | `postgres://postgres.xxxx:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
 | `DIRECT_URL` | Direct connection string for Supabase database (session mode). Used for migrations. | `postgres://postgres.xxxx:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:5432/postgres` |
-| `NEXT_PUBLIC_APP_URL` | Public production domain where this application is hosted. | `https://oau-enviro-rank.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | Public production domain where this application is hosted (e.g. your Cloud Run URL). | `https://oau-enviro-rank-xxxxxx-uc.a.run.app` |
 | `NODE_ENV` | Target environment. | `production` |
 
 ---
@@ -55,59 +55,101 @@ npx tsx prisma/seed.ts
 
 ---
 
-## 3. Serverless Deployment Guides
+## 3. Google Cloud Run Deployment Guide
 
-### Option A: Vercel (Recommended - Serverless Server & Frontend)
+Google Cloud Run is a fully managed compute platform that automatically scales your stateless containers. Since our project includes a multi-stage `Dockerfile` configured for Next.js standalone builds, it is perfectly suited for deployment to Cloud Run.
 
-Vercel provides the easiest and most performant serverless hosting for Next.js App Router applications.
+### Prerequisites & Initial Setup
 
-1. **Push your code** to a GitHub repository.
-2. Go to the [Vercel Dashboard](https://vercel.com) and click **Add New Project**.
-3. Import your repository.
-4. Expand **Environment Variables** and add:
-   - `DATABASE_URL`
-   - `DIRECT_URL`
-   - `NEXT_PUBLIC_APP_URL`
-5. In **Build and Development Settings**, override the **Build Command** to ensure client generation and database migrations occur before building static pages:
+1. **Install Google Cloud SDK**: Ensure the `gcloud` CLI is installed and authenticated on your local machine.
+2. **Select GCP Project**:
    ```bash
-   npx prisma generate && npx prisma db push && next build
+   gcloud config set project [YOUR_PROJECT_ID]
    ```
-6. Click **Deploy**. Vercel will build the application and provide a direct shared URL (e.g., `https://oau-enviro-rank.vercel.app`).
+3. **Enable Required APIs**: Enable the Cloud Run, Artifact Registry, and Cloud Build APIs:
+   ```bash
+   gcloud services enable run.googleapis.com \
+                          artifactregistry.googleapis.com \
+                          cloudbuild.googleapis.com
+   ```
 
 ---
 
-### Option B: Railway (Docker Deployment)
+### Option A: Direct Source Deployment (Simplest & Recommended)
 
-Railway builds and runs applications in isolated containers, which works perfectly with the custom multi-stage `Dockerfile` we provided.
+This method uses Cloud Build to package your application and deploy it directly to Cloud Run in a single command. It reads your local `Dockerfile` and builds the image automatically without needing a manual registry push.
 
-1. Create a project on [Railway](https://railway.app).
-2. Click **New Service** -> **GitHub Repo** and select your repository.
-3. Railway will automatically detect the root `Dockerfile` and build it.
-4. Go to **Variables** and add:
-   - `DATABASE_URL` (Supabase connection pooler string)
-   - `DIRECT_URL` (Supabase direct connection string)
-   - `NEXT_PUBLIC_APP_URL` (Your Railway app domain)
-5. Go to **Settings** and click **Generate Domain** under the Public Networking section.
-6. Trigger a deployment. Railway will build the Docker container and start the Next.js standalone server on port 3000.
+Run the following command in the project root:
+
+```bash
+gcloud run deploy oau-enviro-rank \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars DATABASE_URL="[YOUR_SUPABASE_TRANSACTION_CONNECTION_STRING]",DIRECT_URL="[YOUR_SUPABASE_SESSION_CONNECTION_STRING]",NEXT_PUBLIC_APP_URL="[YOUR_CLOUD_RUN_URL]"
+```
+
+*Note: You can omit `NEXT_PUBLIC_APP_URL` on the first deploy, copy the service URL from the command output, and then redeploy with the `NEXT_PUBLIC_APP_URL` set.*
+
+---
+
+### Option B: Deploying via Artifact Registry & Cloud Build (Structured)
+
+For team environments or structured CI/CD pipelines, you can build and publish the Docker container to Google Artifact Registry first, and then run it.
+
+#### Step 1: Create a Docker Artifact Registry Repository
+```bash
+gcloud artifacts repositories create oau-enviro-rank-repo \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description="Docker repository for OAU Enviro Rank"
+```
+
+#### Step 2: Build and Tag the Image using Cloud Build
+```bash
+gcloud builds submit --tag us-central1-docker.pkg.dev/[YOUR_PROJECT_ID]/oau-enviro-rank-repo/oau-enviro-rank:latest .
+```
+
+#### Step 3: Deploy the Container Image to Cloud Run
+```bash
+gcloud run deploy oau-enviro-rank \
+  --image us-central1-docker.pkg.dev/[YOUR_PROJECT_ID]/oau-enviro-rank-repo/oau-enviro-rank:latest \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars DATABASE_URL="[YOUR_SUPABASE_TRANSACTION_CONNECTION_STRING]",DIRECT_URL="[YOUR_SUPABASE_SESSION_CONNECTION_STRING]",NEXT_PUBLIC_APP_URL="[YOUR_CLOUD_RUN_URL]"
+```
 
 ---
 
-### Option C: Render (Docker Web Service)
+### Security Best Practice: Using GCP Secret Manager for Environment Variables
 
-Render is another excellent platform for running Dockerized web services.
+Instead of passing secrets like database credentials directly in plain-text environment variables, use **Secret Manager**:
 
-1. Sign in to [Render](https://render.com).
-2. Click **New** -> **Web Service**.
-3. Connect your GitHub repository.
-4. Select **Docker** as the Runtime environment.
-5. In **Environment**, add the following variables:
-   - `DATABASE_URL`
-   - `DIRECT_URL`
-   - `NEXT_PUBLIC_APP_URL`
-6. Choose the **Free** instance type (or starter/pro for faster builds).
-7. Click **Create Web Service**. Render will pull the code, execute the multi-stage build specified in the `Dockerfile`, and expose your service publicly.
+1. **Create the Secrets**:
+   ```bash
+   echo -n "YOUR_DATABASE_URL" | gcloud secrets create DB_URL_SECRET --data-file=-
+   echo -n "YOUR_DIRECT_URL" | gcloud secrets create DIRECT_URL_SECRET --data-file=-
+   ```
+2. **Grant Secret Access Permission**:
+   Cloud Run uses the Compute Engine Default Service Account (`[PROJECT_NUMBER]-compute@developer.gserviceaccount.com`) by default. Grant it accessor permission:
+   ```bash
+   gcloud secrets add-iam-policy-binding DB_URL_SECRET \
+     --member="serviceAccount:[PROJECT_NUMBER]-compute@developer.gserviceaccount.com" \
+     --role="roles/secretmanager.secretAccessor"
 
----
+   gcloud secrets add-iam-policy-binding DIRECT_URL_SECRET \
+     --member="serviceAccount:[PROJECT_NUMBER]-compute@developer.gserviceaccount.com" \
+     --role="roles/secretmanager.secretAccessor"
+   ```
+3. **Deploy Reference to Secrets**:
+   ```bash
+   gcloud run deploy oau-enviro-rank \
+     --source . \
+     --region us-central1 \
+     --allow-unauthenticated \
+     --set-secrets=DATABASE_URL=DB_URL_SECRET:latest,DIRECT_URL=DIRECT_URL_SECRET:latest \
+     --set-env-vars NEXT_PUBLIC_APP_URL="[YOUR_CLOUD_RUN_URL]"
+   ```
 
 ## 4. Verification in Production
 
