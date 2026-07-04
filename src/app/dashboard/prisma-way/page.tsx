@@ -4,6 +4,13 @@ import PrismaWayClient from './PrismaWayClient'
 
 export const dynamic = 'force-dynamic'
 
+interface Profile {
+  id: string
+  email: string
+  role: 'superadmin' | 'user'
+  created_at: string
+}
+
 export default async function PrismaWayPage() {
   const supabase = await createClient()
 
@@ -20,6 +27,9 @@ export default async function PrismaWayPage() {
       />
     )
   }
+
+  let formattedProfile: Profile | null = null
+  let formattedProfiles: Profile[] | null = null
 
   try {
     // 2. Fetch profile and profiles under RLS policies using Prisma
@@ -43,7 +53,7 @@ export default async function PrismaWayPage() {
       return { profile, profiles }
     })
 
-    const formattedProfile = profile
+    formattedProfile = profile
       ? {
           id: profile.id,
           email: profile.email,
@@ -52,30 +62,21 @@ export default async function PrismaWayPage() {
         }
       : null
 
-    const formattedProfiles = profiles.map((p) => ({
+    formattedProfiles = profiles.map((p) => ({
       id: p.id,
       email: p.email,
       role: p.role === 'superadmin' ? ('superadmin' as const) : ('user' as const),
       created_at: p.createdAt.toISOString()
     }))
-
-    return (
-      <PrismaWayClient
-        initialUser={user}
-        initialProfile={formattedProfile}
-        initialProfiles={formattedProfiles}
-      />
-    )
   } catch (err) {
     console.error('Error fetching data via Prisma with RLS:', err)
-    
-    // Fallback if profiles table is not yet migrated/created in target database
-    return (
-      <PrismaWayClient
-        initialUser={user}
-        initialProfile={null}
-        initialProfiles={null}
-      />
-    )
   }
+
+  return (
+    <PrismaWayClient
+      initialUser={user}
+      initialProfile={formattedProfile}
+      initialProfiles={formattedProfiles}
+    />
+  )
 }

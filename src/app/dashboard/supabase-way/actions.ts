@@ -21,8 +21,9 @@ export async function updateProfileRole(profileId: string, newRole: 'superadmin'
 
     revalidatePath('/dashboard/supabase-way')
     return { success: true, data }
-  } catch (err: any) {
-    return { success: false, error: err.message }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { success: false, error: message }
   }
 }
 

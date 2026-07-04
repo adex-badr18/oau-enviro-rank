@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { updateProfileRole, handleSignOut } from './actions'
+import { User as SupabaseUser } from '@supabase/supabase-js'
 import { 
   User, 
   Shield, 
@@ -25,7 +26,7 @@ interface Profile {
 }
 
 interface SupabaseWayClientProps {
-  initialUser: any
+  initialUser: SupabaseUser | null
   initialProfile: Profile | null
   initialProfiles: Profile[] | null
 }
@@ -36,7 +37,7 @@ export default function SupabaseWayClient({
   initialProfiles
 }: SupabaseWayClientProps) {
   const supabase = createClient()
-  const [user, setUser] = useState(initialUser)
+  const [user] = useState<SupabaseUser | null>(initialUser)
   const [profile, setProfile] = useState<Profile | null>(initialProfile)
   const [profiles, setProfiles] = useState<Profile[] | null>(initialProfiles)
   const [loading, setLoading] = useState(false)
@@ -57,7 +58,7 @@ export default function SupabaseWayClient({
 
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -69,7 +70,7 @@ export default function SupabaseWayClient({
         if (error) throw error
         setSuccessMsg('Sign up successful! Please check your email or refresh if auto-confirmed.')
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password
         })
@@ -78,8 +79,9 @@ export default function SupabaseWayClient({
         // Refresh page/state
         window.location.reload()
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Authentication failed')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setErrorMsg(msg)
     } finally {
       setLoading(false)
     }
