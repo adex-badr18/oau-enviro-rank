@@ -58,3 +58,19 @@ model UserResponse {
   faculty   Faculty          @relation(fields: [facultyId], references: [id], onDelete: Cascade)
   period    AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
 }
+
+enum UserRoleEnum {
+  superadmin
+  user
+}
+
+model Profile {
+  id        String       @id @db.Uuid
+  email     String
+  role      UserRoleEnum @default(user)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
