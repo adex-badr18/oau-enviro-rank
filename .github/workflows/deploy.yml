@@ -1,0 +1,49 @@
+name: Deploy to Vercel
+
+# This workflow triggers on pushes to the main branch and deploys the application to Vercel.
+# Before running this workflow, you MUST configure the following secrets in your GitHub Repository:
+#
+# 1. VERCEL_TOKEN: Go to Vercel Dashboard -> Account Settings -> Tokens -> Create a token.
+# 2. VERCEL_ORG_ID: Run 'npx vercel link' locally or find your Team/User ID in Vercel settings.
+#    Alternatively, check the 'orgId' value inside your local '.vercel/project.json'.
+# 3. VERCEL_PROJECT_ID: Find this in the project settings on Vercel or check the 'projectId' 
+#    value inside your local '.vercel/project.json'.
+# 4. DATABASE_URL / DIRECT_URL / NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY:
+#    These should be added directly as environment variables in your Vercel Project Settings 
+#    so they are available to your application at runtime.
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Linting
+        run: npm run lint
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./

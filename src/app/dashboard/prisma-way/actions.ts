@@ -32,9 +32,10 @@ export async function updateProfileRolePrisma(profileId: string, newRole: 'super
 
     revalidatePath('/dashboard/prisma-way')
     return { success: true, data: updatedProfile }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Prisma mutation RLS error:', err)
-    return { success: false, error: err.message || 'RLS Policy Violation: Access Denied' }
+    const message = err instanceof Error ? err.message : String(err)
+    return { success: false, error: message }
   }
 }
 
