@@ -3,8 +3,8 @@ import { getPerformanceRating } from "@/lib/score-calculator";
 import LeaderboardClient from "./LeaderboardClient";
 import type { Metadata } from "next";
 
-// Auto-revalidate the cached rankings page every 60 seconds (as requested)
-export const revalidate = 60;
+// Force dynamic rendering to prevent build-time database connection errors
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "OAU Environmental Compliance Dashboard | Real-time Faculty Leaderboard",
