@@ -1,3 +1,4 @@
+process.env.BYPASS_AUTH_FOR_TEST = "true";
 import { GET as getFaculties, POST as createFaculty } from "@/app/api/faculties/route";
 import { PATCH as updateFaculty, DELETE as deleteFaculty } from "@/app/api/faculties/[id]/route";
 import { POST as inspectPOST } from "@/app/api/inspect/route";
@@ -10,7 +11,7 @@ async function runTests() {
 
   // 1. Test GET /api/faculties
   console.log("\n1. Testing GET /api/faculties (list)...");
-  const getRes = await getFaculties();
+  const getRes = await getFaculties() as any;
   const initialFaculties = await getRes.json();
   console.log(`Successfully fetched ${initialFaculties.length} faculties.`);
   if (initialFaculties.length < 16) {
@@ -29,7 +30,7 @@ async function runTests() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(createPayload),
   });
-  const createRes = await createFaculty(createReq);
+  const createRes = await createFaculty(createReq) as any;
   const createdFaculty = await createRes.json();
   console.log("Created Faculty:", createdFaculty);
   if (!createdFaculty.id || createdFaculty.name !== createPayload.name) {
@@ -49,7 +50,7 @@ async function runTests() {
   });
   const patchRes = await updateFaculty(patchReq, {
     params: Promise.resolve({ id: facultyId }),
-  });
+  }) as any;
   const patchedFaculty = await patchRes.json();
   console.log("Updated Faculty:", patchedFaculty);
   if (patchedFaculty.buildingName !== patchPayload.buildingName) {
@@ -82,7 +83,7 @@ async function runTests() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(inspectPayload),
   });
-  const inspectRes = await inspectPOST(inspectReq);
+  const inspectRes = await inspectPOST(inspectReq) as any;
   const inspectResult = await inspectRes.json();
   console.log("Inspection Result:", inspectResult);
   if (inspectResult.scoreBreakdown.officialNormalized !== 75) {
@@ -117,7 +118,7 @@ async function runTests() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(staffVote1Payload),
   });
-  const voteRes1 = await votePOST(voteReq1);
+  const voteRes1 = await votePOST(voteReq1) as any;
   const voteResult1 = await voteRes1.json();
   console.log("Vote 1 Result:", voteResult1);
   if (voteResult1.scoreBreakdown.staffNormalized !== 75) {
@@ -145,7 +146,7 @@ async function runTests() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(staffVote2Payload),
   });
-  const voteRes2 = await votePOST(voteReq2);
+  const voteRes2 = await votePOST(voteReq2) as any;
   const voteResult2 = await voteRes2.json();
   console.log("Vote 2 Result:", voteResult2);
   if (voteResult2.scoreBreakdown.staffNormalized !== 75) {
@@ -172,7 +173,7 @@ async function runTests() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(studentVotePayload),
   });
-  const voteRes3 = await votePOST(voteReq3);
+  const voteRes3 = await votePOST(voteReq3) as any;
   const voteResult3 = await voteRes3.json();
   console.log("Vote 3 Result:", voteResult3);
   if (voteResult3.scoreBreakdown.studentNormalized !== 100) {
@@ -205,7 +206,7 @@ async function runTests() {
   });
   const deleteRes = await deleteFaculty(deleteReq, {
     params: Promise.resolve({ id: facultyId }),
-  });
+  }) as any;
   const deleteResult = await deleteRes.json();
   console.log("Delete result:", deleteResult);
 

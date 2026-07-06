@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { checkSuperadmin } from "@/utils/supabase/check-admin";
 
 const UpdateFacultySchema = z.object({
   name: z.string().min(2, "Faculty name must be at least 2 characters").optional(),
@@ -13,6 +14,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await checkSuperadmin();
+  if (!auth.authorized) {
+    return auth.response;
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -76,6 +82,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await checkSuperadmin();
+  if (!auth.authorized) {
+    return auth.response;
+  }
+
   try {
     const { id } = await params;
 

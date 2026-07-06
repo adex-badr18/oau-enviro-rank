@@ -5,8 +5,14 @@ import {
   getPerformanceRating,
 } from "@/lib/score-calculator";
 import ExcelJS from "exceljs";
+import { checkSuperadmin } from "@/utils/supabase/check-admin";
 
 export async function GET(request: NextRequest) {
+  const auth = await checkSuperadmin();
+  if (!auth.authorized) {
+    return auth.response;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const startMonth = parseInt(searchParams.get("startMonth") || "1", 10);
