@@ -8,6 +8,7 @@ import {
   getPerformanceRating,
 } from "@/lib/score-calculator";
 import { z } from "zod";
+import { checkSuperadmin } from "@/utils/supabase/check-admin";
 
 const InspectRequestSchema = z.object({
   facultyId: z.string().uuid("Invalid faculty ID format"),
@@ -17,6 +18,11 @@ const InspectRequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const auth = await checkSuperadmin();
+  if (!auth.authorized) {
+    return auth.response;
+  }
+
   try {
     const body = await request.json();
     const result = InspectRequestSchema.safeParse(body);
