@@ -10,22 +10,24 @@ datasource db {
 }
 
 model Faculty {
-  id           String               @id @default(uuid())
-  name         String               @unique
-  buildingName String?
-  description  String?
-  currentScore Float                @default(0.0)
-  inspections  OfficialInspection[]
-  responses    UserResponse[]
+  id            String                @id @default(uuid())
+  name          String                @unique
+  buildingName  String?
+  description   String?
+  currentScore  Float                 @default(0.0)
+  inspections   OfficialInspection[]
+  responses     UserResponse[]
+  monthlyScores MonthlyFacultyScore[]
 }
 
 model AssessmentPeriod {
-  id          String               @id @default(uuid())
-  month       Int
-  year        Int
-  isActive    Boolean              @default(true)
-  inspections OfficialInspection[]
-  responses   UserResponse[]
+  id            String                @id @default(uuid())
+  month         Int
+  year          Int
+  isActive      Boolean               @default(true)
+  inspections   OfficialInspection[]
+  responses     UserResponse[]
+  monthlyScores MonthlyFacultyScore[]
 
   @@unique([month, year])
 }
@@ -49,14 +51,15 @@ enum UserRole {
 }
 
 model UserResponse {
-  id        String           @id @default(uuid())
-  facultyId String
-  periodId  String
-  role      UserRole
-  responses Json             // JSON storing 1-5 scale ratings mapped to criteria (e.g. {"hygiene": 4, "odor": 5})
-  createdAt DateTime         @default(now())
-  faculty   Faculty          @relation(fields: [facultyId], references: [id], onDelete: Cascade)
-  period    AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  id           String           @id @default(uuid())
+  facultyId    String
+  periodId     String
+  role         UserRole
+  responses    Json             // JSON storing 1-5 scale ratings mapped to criteria (e.g. {"hygiene": 4, "odor": 5})
+  respondentId String?          @map("respondent_id")
+  createdAt    DateTime         @default(now())
+  faculty      Faculty          @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  period       AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
 }
 
 enum UserRoleEnum {
@@ -74,3 +77,18 @@ model Profile {
   @@map("profiles")
 }
 
+
+model MonthlyFacultyScore {
+  id             String           @id @default(uuid())
+  facultyId      String           @map("faculty_id")
+  periodId       String           @map("period_id")
+  finalScore     Float            @map("final_score")
+  scoreBreakdown Json             @map("score_breakdown")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  faculty        Faculty          @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  period         AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@unique([facultyId, periodId])
+  @@map("monthly_faculty_scores")
+}

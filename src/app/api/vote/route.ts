@@ -14,6 +14,7 @@ const VoteRequestSchema = z.object({
   month: z.number().int().min(1).max(12),
   year: z.number().int().min(2000).max(2100),
   role: z.enum(["STAFF", "STUDENT"]),
+  respondentId: z.string().optional(),
   responses: UserResponseRatingsSchema,
 });
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { facultyId, month, year, role, responses } = result.data;
+    const { facultyId, month, year, role, respondentId, responses } = result.data;
 
     // Check if faculty exists
     const faculty = await prisma.faculty.findUnique({
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
           facultyId,
           periodId: period.id,
           role,
+          respondentId: respondentId || null,
           responses,
         },
       });

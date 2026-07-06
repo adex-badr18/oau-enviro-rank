@@ -24,6 +24,7 @@ const surveyFormSchema = z.object({
     message: "Please select your role (Staff or Student).",
   }),
   facultyId: z.string().uuid("Please select a target faculty from the dropdown."),
+  respondentId: z.string().optional(),
   cleanliness: z.number({ message: "Please select a score." }).min(1).max(5),
   landscape: z.number({ message: "Please select a score." }).min(1).max(5),
   wasteDisposal: z.number({ message: "Please select a score." }).min(1).max(5),
@@ -217,6 +218,9 @@ export default function SurveyPage() {
     formState: { errors },
   } = useForm<SurveyFormValues>({
     resolver: zodResolver(surveyFormSchema),
+    defaultValues: {
+      respondentId: "",
+    },
     mode: "onTouched",
   });
 
@@ -290,6 +294,7 @@ export default function SurveyPage() {
         month,
         year,
         role: data.role,
+        respondentId: data.respondentId || undefined,
         responses: {
           cleanliness: data.cleanliness,
           landscape: data.landscape,
@@ -805,6 +810,32 @@ export default function SurveyPage() {
                   <div className="p-4 bg-zinc-50/50 dark:bg-zinc-800/10 rounded-xl border border-zinc-150 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400">
                     <span className="font-bold text-zinc-750 dark:text-zinc-300 block mb-1">Faculty Description</span>
                     {currentFaculty.description}
+                  </div>
+                )}
+
+                {/* Respondent ID (Optional) */}
+                {selectedRole && (
+                  <div className="space-y-2 animate-in fade-in duration-200">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300 block">
+                      {selectedRole === "STUDENT" ? "Matriculation Number (Optional)" : "Staff ID Number (Optional)"}
+                    </label>
+                    <Controller
+                      name="respondentId"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder={selectedRole === "STUDENT" ? "e.g. CSC/2021/001" : "e.g. STF/1024"}
+                          className="w-full px-4 h-12 bg-white dark:bg-[#11141e] border border-zinc-200 dark:border-zinc-800/80 rounded-xl text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold"
+                        />
+                      )}
+                    />
+                    {errors.respondentId && (
+                      <span className="text-rose-500 text-xs font-semibold block" role="alert">
+                        {errors.respondentId.message}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
