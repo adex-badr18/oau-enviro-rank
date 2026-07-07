@@ -13,6 +13,9 @@ import {
   Search,
   ClipboardList,
   Building2,
+  History,
+  RefreshCw,
+  CheckCircle2,
 } from "lucide-react";
 
 interface FacultyReport {
@@ -25,11 +28,24 @@ interface FacultyReport {
   rating: string;
 }
 
+interface HistoricalReport {
+  id: string;
+  facultyId: string;
+  name: string;
+  finalScore: number;
+  rating: string;
+  officialNormalized: number;
+  staffNormalized: number;
+  studentNormalized: number;
+  totalStaffVotes: number;
+  totalStudentVotes: number;
+}
+
 export default function AdminReportsPage() {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
 
-  // State variables for Date Range selection
+  // State variables for Date Range selection (Live Preview)
   const [startMonth, setStartMonth] = useState(6); // Default matching seeded data month
   const [startYear, setStartYear] = useState(2026); // Default matching seeded data year
   const [endMonth, setEndMonth] = useState(6);
@@ -41,41 +57,88 @@ export default function AdminReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch preview data on selection changes
-  useEffect(() => {
-    async function loadPreview() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const queryParams = new URLSearchParams({
-          startMonth: startMonth.toString(),
-          startYear: startYear.toString(),
-          endMonth: endMonth.toString(),
-          endYear: endYear.toString(),
-          preview: "true",
-        });
+  // Historical Snapshot State
+  const [histMonth, setHistMonth] = useState(6); // Default matching seeded month
+  const [histYear, setHistYear] = useState(2026); // Default matching seeded year
+  const [histData, setHistData] = useState<HistoricalReport[]>([]);
+  const [isHistLoading, setIsHistLoading] = useState(false);
+  const [histError, setHistError] = useState<string | null>(null);
+  const [histSearchQuery, setHistSearchQuery] = useState("");
 
-        const res = await fetch(`/api/admin/reports?${queryParams.toString()}`);
-        const result = await res.json();
+  // Action status state
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-        if (!res.ok) {
-          throw new Error(result.message || "Failed to fetch preview report data.");
-        }
+  // Fetch preview data function
+  async function loadPreview() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const queryParams = new URLSearchParams({
+        startMonth: startMonth.toString(),
+        startYear: startYear.toString(),
+        endMonth: endMonth.toString(),
+        endYear: endYear.toString(),
+        preview: "true",
+      });
 
-        setPreviewData(result.data || []);
-      } catch (err: any) {
-        setPreviewData([]);
-        setError(err.message || "Something went wrong.");
-      } finally {
-        setIsLoading(false);
+      const res = await fetch(`/api/admin/reports?${queryParams.toString()}`);
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to fetch preview report data.");
       }
+
+      setPreviewData(result.data || []);
+    } catch (err: any) {
+      setPreviewData([]);
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setIsLoading(false);
     }
+  }
+
+  // Fetch historical snapshot data function
+  async function loadHistoricalData() {
+    setIsHistLoading(true);
+    setHistError(null);
+    try {
+      const queryParams = new URLSearchParams({
+        month: histMonth.toString(),
+        year: histYear.toString(),
+      });
+      const res = await fetch(`/api/admin/reports/history?${queryParams.toString()}`);
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to fetch historical snapshots.");
+      }
+
+      setHistData(result.data || []);
+    } catch (err: any) {
+      setHistData([]);
+      setHistError(err.message || "Something went wrong.");
+    } finally {
+      setIsHistLoading(false);
+    }
+  }
+
+  // Effects for data loading
+  useEffect(() => {
     loadPreview();
   }, [startMonth, startYear, endMonth, endYear]);
 
-  // Filter preview data by search input
+  useEffect(() => {
+    loadHistoricalData();
+  }, [histMonth, histYear]);
+
+  // Filters
   const filteredData = previewData.filter((row) =>
     row.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredHistData = histData.filter((row) =>
+    row.name.toLowerCase().includes(histSearchQuery.toLowerCase())
   );
 
   // Trigger Excel Sheet Download
@@ -88,6 +151,44 @@ export default function AdminReportsPage() {
     });
     window.location.href = `/api/admin/reports?${queryParams.toString()}`;
   };
+
+  // Trigger snapshot generation
+  async function handleGenerateSnapshot() {
+    setIsGenerating(true);
+    setNotification(null);
+    try {
+      const res = await fetch("/api/calculate-monthly-scores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          month: histMonth,
+          year: histYear,
+        }),
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to generate monthly snapshot.");
+      }
+
+      const monthName = new Date(0, histMonth - 1).toLocaleString("default", { month: "long" });
+      setNotification({
+        type: "success",
+        message: `Environmental compliance scores for ${monthName} ${histYear} snapshotted and locked in successfully!`,
+      });
+
+      // Reload both dashboards to ensure data consistency
+      loadHistoricalData();
+      loadPreview();
+    } catch (err: any) {
+      setNotification({
+        type: "error",
+        message: err.message || "Failed to generate monthly snapshot.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  }
 
   // Helper for ranking color classes
   const getRatingBadgeClass = (rating: string) => {
@@ -114,15 +215,15 @@ export default function AdminReportsPage() {
             <img src="/oau-logo.png" alt="OAU Logo" className="h-14 w-14 object-contain shrink-0" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-slate-455 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
+                <span className="text-xs font-black text-slate-405 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
                 <span className="text-slate-300">|</span>
                 <span className="inline-flex items-center gap-1 text-[#fcb900] text-xs font-black uppercase tracking-wider">Reporting Suite</span>
               </div>
               <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight mt-0.5">
-                Spreadsheet Report Generator
+                Compliance Reports Dashboard
               </h1>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Export professional Excel workbooks of environmental compliance rankings and preview data in real time.
+                Generate monthly snapshots, view historical ranks, and download professional Excel reports.
               </p>
             </div>
           </div>
@@ -144,7 +245,7 @@ export default function AdminReportsPage() {
           </div>
         </div>
 
-        {/* Configurations Box */}
+        {/* Configurations Box (Live Preview Filter) */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1">
@@ -282,7 +383,7 @@ export default function AdminReportsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800/60">
-                  {filteredData.map((row, i) => (
+                  {filteredData.map((row) => (
                     <tr
                       key={row.id}
                       className="hover:bg-slate-50/40 dark:hover:bg-slate-850/20 transition-colors"
@@ -304,6 +405,170 @@ export default function AdminReportsPage() {
                       </td>
                       <td className="py-4 px-6 text-center">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${getRatingBadgeClass(row.rating)}`}>
+                          {row.rating}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
+        {/* Monthly Snapshots Archive Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mt-12">
+          {/* Header */}
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-[#10386b] dark:text-white flex items-center gap-2">
+                <History className="h-5 w-5 text-[#fcb900]" />
+                Monthly Snapshots Archive
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Query, view, and regenerate locked-in historical compliance records from the database.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Month Selector */}
+              <select
+                value={histMonth}
+                onChange={(e) => setHistMonth(parseInt(e.target.value))}
+                className="px-3 h-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900]"
+              >
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <option key={m} value={m}>
+                    {new Date(0, m - 1).toLocaleString("default", { month: "long" })}
+                  </option>
+                ))}
+              </select>
+
+              {/* Year Selector */}
+              <input
+                type="number"
+                min="2000"
+                max="2100"
+                value={histYear}
+                onChange={(e) => setHistYear(parseInt(e.target.value) || histYear)}
+                className="w-20 px-3 h-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-xs text-slate-700 dark:text-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900]"
+              />
+
+              {/* Generate Button */}
+              <button
+                type="button"
+                onClick={handleGenerateSnapshot}
+                disabled={isGenerating}
+                className="h-10 px-4 inline-flex items-center justify-center gap-2 rounded-xl bg-[#10386b] hover:bg-[#0c2a52] text-white dark:bg-[#fcb900] dark:hover:bg-[#e2a600] dark:text-slate-900 text-xs font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5" />
+                )}
+                Generate Snapshot
+              </button>
+            </div>
+          </div>
+
+          {/* Toast Notification */}
+          {notification && (
+            <div className={`p-4 border-b text-xs font-semibold flex items-center justify-between gap-3 ${
+              notification.type === "success" 
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/30 dark:text-emerald-400" 
+                : "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-450"
+            }`}>
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                {notification.message}
+              </span>
+              <button 
+                onClick={() => setNotification(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold px-1"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {/* Filter search */}
+          <div className="p-4 bg-slate-50/30 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800 flex justify-end">
+            <div className="relative max-w-xs w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Filter snapshot faculties..."
+                value={histSearchQuery}
+                onChange={(e) => setHistSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 h-9 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] text-slate-700 dark:text-slate-300"
+              />
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="overflow-x-auto">
+            {isHistLoading ? (
+              <div className="p-16 flex flex-col items-center justify-center text-slate-400">
+                <Loader2 className="h-8 w-8 animate-spin text-[#fcb900] mb-3" />
+                <span className="text-xs font-semibold">Fetching historical snapshots...</span>
+              </div>
+            ) : histError ? (
+              <div className="p-16 flex flex-col items-center justify-center text-center">
+                <div className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-500 rounded-full mb-3">
+                  <AlertCircle className="h-7 w-7" />
+                </div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Failed to Load</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 max-w-sm">
+                  {histError}
+                </p>
+              </div>
+            ) : filteredHistData.length === 0 ? (
+              <div className="p-16 text-center text-slate-400 flex flex-col items-center justify-center">
+                <ClipboardList className="h-8 w-8 text-slate-350 mb-3" />
+                <span className="text-xs font-semibold mb-1">No Snapshot Found</span>
+                <p className="text-[10px] text-slate-400 max-w-xs">
+                  No snapshot has been locked in for this period yet. Click "Generate Snapshot" above to calculate and save.
+                </p>
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/10">
+                    <th className="py-3.5 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-center w-16">Rank</th>
+                    <th className="py-3.5 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Faculty Name</th>
+                    <th className="py-3.5 px-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Official (70%)</th>
+                    <th className="py-3.5 px-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Staff (20%)</th>
+                    <th className="py-3.5 px-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Student (10%)</th>
+                    <th className="py-3.5 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Final Score</th>
+                    <th className="py-3.5 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Rating</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-150 dark:divide-slate-800/60">
+                  {filteredHistData.map((row, i) => (
+                    <tr
+                      key={row.id}
+                      className="hover:bg-slate-50/40 dark:hover:bg-slate-850/20 transition-colors"
+                    >
+                      <td className="py-3 px-6 text-xs text-center font-extrabold text-slate-500">
+                        {i + 1}
+                      </td>
+                      <td className="py-3 px-6 text-xs font-extrabold text-[#10386b] dark:text-slate-200">
+                        {row.name}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-600 dark:text-slate-400 text-right font-medium">
+                        {row.officialNormalized.toFixed(1)}%
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-600 dark:text-slate-400 text-right font-medium">
+                        {row.staffNormalized.toFixed(1)}% <span className="text-slate-350 text-[10px]">({row.totalStaffVotes} votes)</span>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-600 dark:text-slate-400 text-right font-medium">
+                        {row.studentNormalized.toFixed(1)}% <span className="text-slate-350 text-[10px]">({row.totalStudentVotes} votes)</span>
+                      </td>
+                      <td className="py-3 px-6 text-xs text-slate-950 dark:text-white text-right font-bold">
+                        {row.finalScore.toFixed(2)}%
+                      </td>
+                      <td className="py-3 px-6 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${getRatingBadgeClass(row.rating)}`}>
                           {row.rating}
                         </span>
                       </td>

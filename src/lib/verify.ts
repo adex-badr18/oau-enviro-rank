@@ -3,11 +3,18 @@ import { GET as getFaculties, POST as createFaculty } from "@/app/api/faculties/
 import { PATCH as updateFaculty, DELETE as deleteFaculty } from "@/app/api/faculties/[id]/route";
 import { POST as inspectPOST } from "@/app/api/inspect/route";
 import { POST as votePOST } from "@/app/api/vote/route";
+import { GET as recalculateScores } from "@/app/api/calculate-monthly-scores/route";
+import { GET as getHistory } from "@/app/api/admin/reports/history/route";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 
 async function runTests() {
   console.log("=== STARTING ARCHITECTURE INTEGRATION TESTS ===");
+
+  // Cleanup leftovers from any previous failed runs to guarantee idempotency
+  await prisma.faculty.deleteMany({
+    where: { name: "Faculty of Trial Sciences" },
+  });
 
   // 1. Test GET /api/faculties
   console.log("\n1. Testing GET /api/faculties (list)...");
@@ -210,6 +217,42 @@ async function runTests() {
     throw new Error(`Expected persisted finalScore to be 77.5, got ${monthlyScore.finalScore}`);
   }
   console.log("✓ Cumulative score, rating, and MonthlyFacultyScore verified successfully!");
+
+  // 8a. Test GET /api/calculate-monthly-scores (Snapshot generation)
+  console.log("\n8a. Testing Auth Security on calculate-monthly-scores...");
+  delete process.env.BYPASS_AUTH_FOR_TEST;
+  const unauthorizedReq = new NextRequest("http://localhost/api/calculate-monthly-scores");
+  const unauthRes = await recalculateScores(unauthorizedReq) as any;
+  console.log(`Response status (unauthorized): ${unauthRes.status}`);
+  if (unauthRes.status === 200) {
+    throw new Error("Expected request to calculate-monthly-scores to be blocked, but got status 200");
+  }
+  process.env.BYPASS_AUTH_FOR_TEST = "true";
+
+  console.log("\n8b. Testing GET /api/calculate-monthly-scores (with bypass)...");
+  const recalculateReq = new NextRequest("http://localhost/api/calculate-monthly-scores?month=6&year=2026");
+  const recalculateRes = await recalculateScores(recalculateReq) as any;
+  const recalculateResult = await recalculateRes.json();
+  console.log("Recalculate Result:", recalculateResult);
+  if (recalculateRes.status !== 200 || !recalculateResult.results || recalculateResult.results.length === 0) {
+    throw new Error("Failed to recalculate and snapshot scores");
+  }
+  console.log("✓ Snapshot calculations successfully run!");
+
+  // 8c. Test GET /api/admin/reports/history (Historical Snapshot Listing)
+  console.log("\n8c. Testing GET /api/admin/reports/history...");
+  const historyReq = new NextRequest("http://localhost/api/admin/reports/history?month=6&year=2026");
+  const historyRes = await getHistory(historyReq) as any;
+  const historyResult = await historyRes.json();
+  console.log("History Result count:", historyResult.data?.length);
+  if (historyRes.status !== 200 || !historyResult.data || historyResult.data.length === 0) {
+    throw new Error("Failed to fetch historical snapshots data");
+  }
+  const verifiedScore = historyResult.data.find((item: any) => item.facultyId === facultyId);
+  if (!verifiedScore) {
+    throw new Error(`Expected historical record for faculty ID ${facultyId} in the snapshots`);
+  }
+  console.log(`✓ Historical snapshot successfully retrieved: finalScore = ${verifiedScore.finalScore}`);
 
   // 9. Test DELETE /api/faculties/[id] (cascade checking)
   console.log(`\n9. Testing DELETE /api/faculties/${facultyId} (cascade delete)...`);
