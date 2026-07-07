@@ -180,14 +180,14 @@ async function runTests() {
     throw new Error(`Expected student normalized score 100, got ${voteResult3.scoreBreakdown.studentNormalized}`);
   }
 
-  // 8. Verify cumulative calculations
+  // 8. Verify cumulative calculations and MonthlyFacultyScore persistence
   // Cumulative weighted score:
   // Official (70%): 75 * 0.7 = 52.5
   // Staff (20%): 75 * 0.2 = 15.0
   // Student (10%): 100 * 0.1 = 10.0
   // Total = 52.5 + 15 + 10 = 77.5
   // Rating: 77.5 is Good (70-79)
-  console.log("\n8. Verifying Final Cumulative Score...");
+  console.log("\n8. Verifying Final Cumulative Score & Historical Records...");
   const finalScore = voteResult3.faculty.currentScore;
   const rating = voteResult3.scoreBreakdown.rating;
   console.log(`Final Cumulative Score in DB: ${finalScore} (${rating})`);
@@ -197,7 +197,19 @@ async function runTests() {
   if (rating !== "Good") {
     throw new Error(`Expected rating "Good", got "${rating}"`);
   }
-  console.log("✓ Cumulative score and rating calculated successfully!");
+
+  // Retrieve monthly score record from DB
+  const monthlyScore = await prisma.monthlyFacultyScore.findFirst({
+    where: { facultyId },
+  });
+  if (!monthlyScore) {
+    throw new Error("Expected a MonthlyFacultyScore record to be persisted in DB, but found none");
+  }
+  console.log(`Found MonthlyFacultyScore: score = ${monthlyScore.finalScore}`);
+  if (monthlyScore.finalScore !== 77.5) {
+    throw new Error(`Expected persisted finalScore to be 77.5, got ${monthlyScore.finalScore}`);
+  }
+  console.log("✓ Cumulative score, rating, and MonthlyFacultyScore verified successfully!");
 
   // 9. Test DELETE /api/faculties/[id] (cascade checking)
   console.log(`\n9. Testing DELETE /api/faculties/${facultyId} (cascade delete)...`);
@@ -217,10 +229,13 @@ async function runTests() {
   const checkResponses = await prisma.userResponse.findMany({
     where: { facultyId },
   });
-  if (checkInspections.length !== 0 || checkResponses.length !== 0) {
-    throw new Error("Cascade delete failed: related inspections or votes still exist in DB!");
+  const checkMonthlyScores = await prisma.monthlyFacultyScore.findMany({
+    where: { facultyId },
+  });
+  if (checkInspections.length !== 0 || checkResponses.length !== 0 || checkMonthlyScores.length !== 0) {
+    throw new Error("Cascade delete failed: related inspections, votes, or monthly scores still exist in DB!");
   }
-  console.log("✓ Cascade delete works! Faculty and all child relations removed.");
+  console.log("✓ Cascade delete works! Faculty and all child relations (inspections, votes, historical scores) removed.");
 
   console.log("\n=== ALL ARCHITECTURE INTEGRATION TESTS PASSED SUCCESSFULLY! ===");
 }

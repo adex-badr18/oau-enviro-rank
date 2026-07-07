@@ -59,6 +59,29 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // Historical details modal state
+  const [selectedFacultyId, setSelectedFacultyId] = useState<string | null>(null);
+  const [historyData, setHistoryData] = useState<any | null>(null);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  const handleOpenHistory = async (facultyId: string) => {
+    setSelectedFacultyId(facultyId);
+    setIsHistoryLoading(true);
+    setHistoryError(null);
+    setHistoryData(null);
+    try {
+      const res = await fetch(`/api/faculties/${facultyId}/history`);
+      if (!res.ok) throw new Error("Failed to load history");
+      const result = await res.json();
+      setHistoryData(result);
+    } catch (err: any) {
+      setHistoryError(err.message || "Could not retrieve history details");
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
+
   // Poll for leaderboard updates in the background every 15 seconds
   useEffect(() => {
     setLastUpdated(new Date());
@@ -325,7 +348,10 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
             <div className="w-full max-w-4xl flex flex-col sm:flex-row items-end justify-center gap-4 sm:gap-0 mt-8">
               {/* 2ND PLACE (SILVER) - Left */}
               {topThree[1] && (
-                <div className="w-full sm:w-1/3 flex flex-col items-center order-2 sm:order-1 animate-in slide-in-from-bottom duration-500">
+                <div
+                  onClick={() => handleOpenHistory(topThree[1].id)}
+                  className="w-full sm:w-1/3 flex flex-col items-center order-2 sm:order-1 animate-in slide-in-from-bottom duration-500 cursor-pointer hover:scale-[1.03] transition-transform"
+                >
                   {/* Faculty Card Info */}
                   <div className="text-center px-4 mb-4">
                     <p className="text-sm font-extrabold text-[#10386b] dark:text-white line-clamp-1">{topThree[1].name}</p>
@@ -346,7 +372,10 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
 
               {/* 1ST PLACE (GOLD) - Center */}
               {topThree[0] && (
-                <div className="w-full sm:w-[36%] flex flex-col items-center order-1 sm:order-2 z-10 animate-in slide-in-from-bottom duration-700">
+                <div
+                  onClick={() => handleOpenHistory(topThree[0].id)}
+                  className="w-full sm:w-[36%] flex flex-col items-center order-1 sm:order-2 z-10 animate-in slide-in-from-bottom duration-700 cursor-pointer hover:scale-[1.03] transition-transform"
+                >
                   {/* Crown Icon */}
                   <div className="h-10 w-10 text-brand-gold flex items-center justify-center animate-bounce mb-1">
                     <Crown className="h-8 w-8 fill-brand-gold" />
@@ -371,7 +400,10 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
 
               {/* 3RD PLACE (BRONZE) - Right */}
               {topThree[2] && (
-                <div className="w-full sm:w-1/3 flex flex-col items-center order-3 sm:order-3 animate-in slide-in-from-bottom duration-300">
+                <div
+                  onClick={() => handleOpenHistory(topThree[2].id)}
+                  className="w-full sm:w-1/3 flex flex-col items-center order-3 sm:order-3 animate-in slide-in-from-bottom duration-300 cursor-pointer hover:scale-[1.03] transition-transform"
+                >
                   {/* Faculty Card Info */}
                   <div className="text-center px-4 mb-4">
                     <p className="text-sm font-extrabold text-[#10386b] dark:text-white line-clamp-1">{topThree[2].name}</p>
@@ -441,7 +473,8 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                     return (
                       <tr
                         key={row.id}
-                        className={`hover:bg-slate-50/40 dark:hover:bg-slate-850/20 transition-colors ${
+                        onClick={() => handleOpenHistory(row.id)}
+                        className={`cursor-pointer hover:bg-slate-150/40 dark:hover:bg-slate-800/40 transition-colors ${
                           isPodium ? "bg-slate-50/15 dark:bg-slate-900/5" : ""
                         }`}
                       >
@@ -602,6 +635,201 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
           </p>
         </div>
       </footer>
+
+      {selectedFacultyId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/10">
+              <div>
+                <h3 className="text-xl font-black text-brand-navy dark:text-white">
+                  {historyData?.faculty.name || "Faculty Details"}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {historyData?.faculty.buildingName || "Location details"}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedFacultyId(null)}
+                className="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-450 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors font-bold text-lg focus:outline-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
+              {isHistoryLoading ? (
+                <div className="py-20 flex flex-col items-center justify-center text-slate-450">
+                  <RefreshCw className="h-8 w-8 animate-spin text-[#fcb900] mb-3" />
+                  <span className="text-sm font-semibold">Retrieving history data...</span>
+                </div>
+              ) : historyError ? (
+                <div className="py-20 text-center text-rose-500">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                  <p className="text-sm font-bold">{historyError}</p>
+                </div>
+              ) : (
+                <>
+                  {/* Current Score & Description */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-150 dark:border-slate-800/80">
+                    <div className="flex-1">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Description</h4>
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-350 mt-1 max-w-md leading-relaxed">
+                        {historyData?.faculty.description || "No description provided."}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Current score</span>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-bold border ${getRatingBadgeClass(historyData?.faculty.rating || "Poor")}`}>
+                            {historyData?.faculty.rating}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-16 w-16 bg-white dark:bg-slate-900 border border-slate-250/60 dark:border-slate-800 rounded-xl flex items-center justify-center font-black text-2xl text-brand-navy dark:text-[#fcb900] shadow-sm">
+                        {historyData?.faculty.currentScore.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Components Breakdown */}
+                  <div>
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Score Breakdown</h4>
+                    {(() => {
+                      const latest = historyData?.history[historyData.history.length - 1];
+                      const official = latest?.breakdown.officialNormalized ?? historyData?.faculty.currentScore ?? 0;
+                      const staff = latest?.breakdown.staffNormalized ?? 0;
+                      const student = latest?.breakdown.studentNormalized ?? 0;
+                      const staffVotes = latest?.breakdown.totalStaffVotes ?? 0;
+                      const studentVotes = latest?.breakdown.totalStudentVotes ?? 0;
+
+                      return (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="p-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex flex-col justify-between">
+                            <div>
+                              <span className="text-xs font-extrabold text-[#10386b] dark:text-slate-350 block">Official Audit</span>
+                              <span className="text-[10px] text-slate-400 mt-0.5 block">Weight: 70%</span>
+                            </div>
+                            <div className="mt-4 flex items-baseline justify-between">
+                              <span className="text-2xl font-black text-brand-navy dark:text-[#fcb900]">{official.toFixed(1)}%</span>
+                              <span className="text-[10px] font-semibold text-slate-400">Contrib: {(official * 0.7).toFixed(1)}%</span>
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex flex-col justify-between">
+                            <div>
+                              <span className="text-xs font-extrabold text-[#10386b] dark:text-slate-350 block">Staff Opinion</span>
+                              <span className="text-[10px] text-slate-400 mt-0.5 block">Weight: 20% ({staffVotes} {staffVotes === 1 ? "poll" : "polls"})</span>
+                            </div>
+                            <div className="mt-4 flex items-baseline justify-between">
+                              <span className="text-2xl font-black text-brand-navy dark:text-[#fcb900]">{staff.toFixed(1)}%</span>
+                              <span className="text-[10px] font-semibold text-slate-400">Contrib: {(staff * 0.2).toFixed(1)}%</span>
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex flex-col justify-between">
+                            <div>
+                              <span className="text-xs font-extrabold text-[#10386b] dark:text-slate-350 block">Student Opinion</span>
+                              <span className="text-[10px] text-slate-400 mt-0.5 block">Weight: 10% ({studentVotes} {studentVotes === 1 ? "poll" : "polls"})</span>
+                            </div>
+                            <div className="mt-4 flex items-baseline justify-between">
+                              <span className="text-2xl font-black text-brand-navy dark:text-[#fcb900]">{student.toFixed(1)}%</span>
+                              <span className="text-[10px] font-semibold text-slate-400">Contrib: {(student * 0.1).toFixed(1)}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* SVG Historical Chart */}
+                  {historyData?.history && historyData.history.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Historical Trend</h4>
+                      {historyData.history.length > 1 ? (
+                        <div className="p-4 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-inner flex flex-col items-center">
+                          <svg className="w-full h-32 text-brand-navy dark:text-[#fcb900]" viewBox="0 0 500 100" preserveAspectRatio="none">
+                            {(() => {
+                              const points = historyData.history.map((h: any, i: number) => {
+                                const x = (i / (historyData.history.length - 1)) * 420 + 40;
+                                const y = 90 - (h.finalScore / 100) * 80;
+                                return { x, y };
+                              });
+
+                              const d = points.reduce((acc: string, p: any, i: number) => {
+                                return i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
+                              }, "");
+
+                              return (
+                                <>
+                                  <path d={d} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                                  {points.map((p: any, i: number) => (
+                                    <circle key={i} cx={p.x} cy={p.y} r="5" className="fill-brand-gold dark:fill-brand-navy stroke-brand-navy dark:stroke-brand-gold stroke-[2]" />
+                                  ))}
+                                </>
+                              );
+                            })()}
+                          </svg>
+                          <div className="w-full flex justify-between px-2 text-[10px] font-bold text-slate-400 mt-2">
+                            {historyData.history.map((h: any, i: number) => (
+                              <span key={i}>{h.periodLabel}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs font-semibold text-slate-450 dark:text-slate-500 italic">
+                          Multiple months of data required to render progress chart.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Historical Table */}
+                  <div>
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Timeline</h4>
+                    <div className="overflow-hidden border border-slate-150 dark:border-slate-800/80 rounded-2xl">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-slate-850/40 text-[10px] font-bold uppercase tracking-wider text-slate-450 border-b border-slate-200 dark:border-slate-800">
+                            <th className="py-2.5 px-4">Period</th>
+                            <th className="py-2.5 px-4 text-right">Score</th>
+                            <th className="py-2.5 px-4 text-center">Rating</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-150 dark:divide-slate-800/60 text-xs">
+                          {historyData?.history.slice().reverse().map((h: any) => (
+                            <tr key={h.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10">
+                              <td className="py-3 px-4 font-bold text-[#10386b] dark:text-slate-200">{h.periodLabel}</td>
+                              <td className="py-3 px-4 text-right font-extrabold text-slate-800 dark:text-white">{h.finalScore.toFixed(2)}%</td>
+                              <td className="py-3 px-4 text-center">
+                                <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border ${getRatingBadgeClass(h.rating)}`}>
+                                  {h.rating}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10 flex justify-end">
+              <button
+                onClick={() => setSelectedFacultyId(null)}
+                className="px-5 py-2 text-xs font-bold bg-[#fcb900] hover:bg-[#e2a600] text-slate-900 rounded-xl transition-all duration-200 focus:outline-none"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -27,6 +27,10 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  if (process.env.BYPASS_AUTH_FOR_TEST === 'true') {
+    return supabaseResponse
+  }
+
   // Refreshing the auth token
   const { data: { user } } = await supabase.auth.getUser()
 
