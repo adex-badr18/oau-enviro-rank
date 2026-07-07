@@ -128,7 +128,35 @@ export async function POST(request: NextRequest) {
         officialNormalized * 0.7 + staffNormalized * 0.2 + studentNormalized * 0.1;
       const roundedFinalScore = Math.round(finalScore * 100) / 100;
 
-      // 4. Update the faculty score in the DB
+      // 4. Upsert historical monthly score for time-series tracking
+      const scoreBreakdownJson = {
+        officialNormalized: Math.round(officialNormalized * 100) / 100,
+        staffNormalized: Math.round(staffNormalized * 100) / 100,
+        studentNormalized: Math.round(studentNormalized * 100) / 100,
+        totalStaffVotes: staffScores.length,
+        totalStudentVotes: studentScores.length,
+      };
+
+      await tx.monthlyFacultyScore.upsert({
+        where: {
+          facultyId_periodId: {
+            facultyId,
+            periodId: period.id,
+          },
+        },
+        update: {
+          finalScore: roundedFinalScore,
+          scoreBreakdown: scoreBreakdownJson,
+        },
+        create: {
+          facultyId,
+          periodId: period.id,
+          finalScore: roundedFinalScore,
+          scoreBreakdown: scoreBreakdownJson,
+        },
+      });
+
+      // 5. Update the faculty score in the DB
       const updatedFaculty = await tx.faculty.update({
         where: { id: facultyId },
         data: {

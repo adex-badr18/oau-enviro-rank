@@ -349,6 +349,12 @@ export default function AdminInspectPage() {
             >
               Log New Scorecard
             </button>
+             <a
+              href="/admin/faculties"
+              className="flex-1 max-w-xs h-12 inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold transition-all duration-200"
+            >
+              Manage Faculties
+            </a>
             <a
               href="/admin/reports"
               className="flex-1 max-w-xs h-12 inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold transition-all duration-200"
@@ -383,6 +389,13 @@ export default function AdminInspectPage() {
           </div>
         </div>
         <div className="mt-4 sm:mt-0 flex gap-3">
+            <a
+              href="/admin/faculties"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200"
+            >
+              <Building2 className="h-4 w-4 text-[#10386b] dark:text-[#fcb900]" />
+              Manage Faculties
+            </a>
             <a
               href="/admin/reports"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200"
