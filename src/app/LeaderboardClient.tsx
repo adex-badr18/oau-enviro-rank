@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   ClipboardList,
   RefreshCw,
+  History,
   AlertCircle,
   ArrowRight,
   ShieldCheck,
@@ -58,6 +59,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [leaderboardType, setLeaderboardType] = useState<"current" | "historical">("current");
 
   // Historical details modal state
   const [selectedFacultyId, setSelectedFacultyId] = useState<string | null>(null);
@@ -89,7 +91,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
       if (!silent) setIsSyncing(true);
       setFetchError(null);
       try {
-        const res = await fetch("/api/leaderboard");
+        const res = await fetch(`/api/leaderboard?type=${leaderboardType}`);
         if (!res.ok) throw new Error("Failed to fetch fresh scores.");
         const updated = await res.json();
         setData(updated);
@@ -102,18 +104,20 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
       }
     };
 
+    fetchLatestData(false);
+
     const interval = setInterval(() => {
       fetchLatestData(true);
     }, 15000); // 15 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [leaderboardType]);
 
   const handleManualRefresh = async () => {
     setIsSyncing(true);
     setFetchError(null);
     try {
-      const res = await fetch("/api/leaderboard");
+      const res = await fetch(`/api/leaderboard?type=${leaderboardType}`);
       if (!res.ok) throw new Error("Failed to fetch fresh scores.");
       const updated = await res.json();
       setData(updated);
@@ -254,6 +258,36 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
       </div>
 
       <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 flex-1 flex flex-col gap-10">
+        {/* Toggle between Current Period & Historical Averages */}
+        <div className="flex justify-center">
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setLeaderboardType("current")}
+              className={`px-5 py-2.5 text-xs font-black rounded-xl transition-all duration-200 flex items-center gap-2 ${
+                leaderboardType === "current"
+                  ? "bg-white dark:bg-slate-850 text-brand-navy dark:text-brand-gold shadow-md shadow-slate-200/50 dark:shadow-none"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-750 dark:hover:text-slate-300"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Current Month
+            </button>
+            <button
+              type="button"
+              onClick={() => setLeaderboardType("historical")}
+              className={`px-5 py-2.5 text-xs font-black rounded-xl transition-all duration-200 flex items-center gap-2 ${
+                leaderboardType === "historical"
+                  ? "bg-white dark:bg-slate-850 text-brand-navy dark:text-brand-gold shadow-md shadow-slate-200/50 dark:shadow-none"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-750 dark:hover:text-slate-300"
+              }`}
+            >
+              <History className="h-3.5 w-3.5" />
+              Historical Averages
+            </button>
+          </div>
+        </div>
+
         {fetchError && (
           <div className="p-4 bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900 rounded-2xl flex items-center gap-3 text-rose-800 dark:text-rose-400 font-medium">
             <AlertCircle className="h-5 w-5 text-rose-500 shrink-0" />
@@ -271,7 +305,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                 {stats.campusAverage}%
               </span>
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-1.5">
-                Weighted compliance rate
+                {leaderboardType === "current" ? "Weighted compliance rate" : "All-time average compliance"}
               </span>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-brand-navy/5 dark:bg-brand-gold/10 text-brand-navy dark:text-[#fcb900] flex items-center justify-center">
@@ -287,7 +321,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                 {stats.totalFaculties}
               </span>
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-1.5">
-                Active campus environments
+                {leaderboardType === "current" ? "Active campus environments" : "Monitored campus environments"}
               </span>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-brand-navy/5 dark:bg-brand-gold/10 text-brand-navy dark:text-[#fcb900] flex items-center justify-center">
@@ -303,7 +337,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                 {stats.totalInspections} <span className="text-xs font-semibold text-slate-400">/ {stats.totalFaculties}</span>
               </span>
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-1.5">
-                Committee audits logged
+                {leaderboardType === "current" ? "Committee audits logged" : "All-time inspections logged"}
               </span>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-brand-navy/5 dark:bg-brand-gold/10 text-brand-navy dark:text-[#fcb900] flex items-center justify-center">
@@ -319,7 +353,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                 {stats.totalVotes.toLocaleString()}
               </span>
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mt-1.5">
-                {stats.totalStudentVotes} students | {stats.totalStaffVotes} staff
+                {leaderboardType === "current" ? `${stats.totalStudentVotes} students | ${stats.totalStaffVotes} staff` : "All-time feedback votes"}
               </span>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-brand-navy/5 dark:bg-brand-gold/10 text-brand-navy dark:text-[#fcb900] flex items-center justify-center">
@@ -333,10 +367,10 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
           <div className="text-center mb-6">
             <h2 className="text-2xl font-black text-brand-navy dark:text-white flex items-center justify-center gap-2">
               <Award className="h-6 w-6 text-brand-gold" />
-              Monthly Compliance Podium
+              {leaderboardType === "current" ? "Monthly Compliance Podium" : "Historical Compliance Podium"}
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-              Honoring the highest-scoring environments for {activePeriod?.label || "June 2026"}.
+              Honoring the highest-scoring environments {leaderboardType === "current" ? `for ${activePeriod?.label || "June 2026"}` : "based on all-time average scores"}.
             </p>
           </div>
 
@@ -432,7 +466,9 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
             <div>
               <h3 className="text-lg font-bold text-brand-navy dark:text-white">All Faculty Rankings</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Complete dynamic directory of Obafemi Awolowo University faculties.
+                {leaderboardType === "current"
+                  ? "Complete dynamic directory of Obafemi Awolowo University faculties."
+                  : "Based on overall historical averages."}
               </p>
             </div>
 
@@ -463,7 +499,9 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                     <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Faculty Details</th>
                     <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Building Location</th>
                     <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-44">Weighted score bar</th>
-                    <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24">Score</th>
+                    <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-right w-24">
+                      {leaderboardType === "current" ? "Score" : "Avg Score"}
+                    </th>
                     <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider text-center w-28">Rating</th>
                   </tr>
                 </thead>
