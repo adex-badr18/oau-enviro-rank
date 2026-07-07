@@ -5,6 +5,7 @@ import { POST as inspectPOST } from "@/app/api/inspect/route";
 import { POST as votePOST } from "@/app/api/vote/route";
 import { GET as recalculateScores } from "@/app/api/calculate-monthly-scores/route";
 import { GET as getHistory } from "@/app/api/admin/reports/history/route";
+import { GET as getLeaderboard } from "@/app/api/leaderboard/route";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 
@@ -253,6 +254,35 @@ async function runTests() {
     throw new Error(`Expected historical record for faculty ID ${facultyId} in the snapshots`);
   }
   console.log(`✓ Historical snapshot successfully retrieved: finalScore = ${verifiedScore.finalScore}`);
+
+  // 8d. Test GET /api/leaderboard (Historical vs Current parameters)
+  console.log("\n8d. Testing GET /api/leaderboard...");
+  const currentLeaderboardReq = new NextRequest("http://localhost/api/leaderboard?type=current");
+  const currentLeaderboardRes = await getLeaderboard(currentLeaderboardReq) as any;
+  const currentLeaderboardResult = await currentLeaderboardRes.json();
+  console.log(`Current leaderboard count: ${currentLeaderboardResult.leaderboard?.length}`);
+  if (currentLeaderboardRes.status !== 200 || !currentLeaderboardResult.leaderboard || currentLeaderboardResult.leaderboard.length === 0) {
+    throw new Error("Failed to fetch current leaderboard data");
+  }
+
+  const historicalLeaderboardReq = new NextRequest("http://localhost/api/leaderboard?type=historical");
+  const historicalLeaderboardRes = await getLeaderboard(historicalLeaderboardReq) as any;
+  const historicalLeaderboardResult = await historicalLeaderboardRes.json();
+  console.log(`Historical leaderboard count: ${historicalLeaderboardResult.leaderboard?.length}`);
+  if (historicalLeaderboardRes.status !== 200 || !historicalLeaderboardResult.leaderboard || historicalLeaderboardResult.leaderboard.length === 0) {
+    throw new Error("Failed to fetch historical leaderboard data");
+  }
+
+  // Find our verified score in the historical averages response
+  const verifyHistoricalItem = historicalLeaderboardResult.leaderboard.find((item: any) => item.id === facultyId);
+  if (!verifyHistoricalItem) {
+    throw new Error(`Expected faculty ${facultyId} to exist in historical leaderboard averages`);
+  }
+  console.log(`✓ Historical averages leaderboard returned score = ${verifyHistoricalItem.currentScore}`);
+  if (verifyHistoricalItem.currentScore !== 77.5) {
+    throw new Error(`Expected historical average score to be 77.5, got ${verifyHistoricalItem.currentScore}`);
+  }
+  console.log("✓ Leaderboard type toggling endpoints verified successfully!");
 
   // 9. Test DELETE /api/faculties/[id] (cascade checking)
   console.log(`\n9. Testing DELETE /api/faculties/${facultyId} (cascade delete)...`);
