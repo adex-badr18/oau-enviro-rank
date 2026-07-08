@@ -1,1 +1,1 @@
-/usr/lib/postgresql/16/bin/postgres "-D" "/home/badrudeen/dev/ai-projects/oau-enviro-rank/pg_data" "-p" "5433" "-k" "/home/badrudeen/dev/ai-projects/oau-enviro-rank/pg_data"
+/usr/lib/postgresql/16/bin/postgres "-D" "pg_data" "-p" "5433" "-c" "unix_socket_directories=."
