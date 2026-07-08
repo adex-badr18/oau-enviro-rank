@@ -35,6 +35,79 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+// ---------------------------------------------------------------------------
+// Shared form fields — defined OUTSIDE the page component so React always
+// sees this as the same component type. If defined inside, every parent
+// re-render (e.g. each keystroke) creates a new function reference, causing
+// React to unmount + remount the fields and lose input focus.
+// ---------------------------------------------------------------------------
+interface FacultyFormFieldsProps {
+  formError: string | null;
+  formName: string;
+  setFormName: (v: string) => void;
+  formBuildingName: string;
+  setFormBuildingName: (v: string) => void;
+  formDescription: string;
+  setFormDescription: (v: string) => void;
+}
+
+function FacultyFormFields({
+  formError,
+  formName,
+  setFormName,
+  formBuildingName,
+  setFormBuildingName,
+  formDescription,
+  setFormDescription,
+}: FacultyFormFieldsProps) {
+  return (
+    <div className="p-6 flex flex-col gap-4">
+      {formError && (
+        <div className="p-3.5 bg-rose-50 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-900 text-rose-700 dark:text-rose-400 rounded-xl text-xs font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>{formError}</span>
+        </div>
+      )}
+
+      <div>
+        <Label htmlFor="faculty-name">
+          Faculty Name <span className="text-rose-500">*</span>
+        </Label>
+        <Input
+          id="faculty-name"
+          type="text"
+          required
+          value={formName}
+          onChange={(e) => setFormName(e.target.value)}
+          placeholder="e.g. Faculty of Technology"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="faculty-building">Building / Location Name</Label>
+        <Input
+          id="faculty-building"
+          type="text"
+          value={formBuildingName}
+          onChange={(e) => setFormBuildingName(e.target.value)}
+          placeholder="e.g. Spider Building"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="faculty-description">Description</Label>
+        <Textarea
+          id="faculty-description"
+          value={formDescription}
+          onChange={(e) => setFormDescription(e.target.value)}
+          placeholder="Enter details about the departments and core building complexes within this faculty..."
+          rows={4}
+        />
+      </div>
+    </div>
+  );
+}
+
 interface Faculty {
   id: string;
   name: string;
@@ -42,6 +115,7 @@ interface Faculty {
   description: string | null;
   currentScore: number;
 }
+
 
 export default function AdminFacultiesPage() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
@@ -219,53 +293,7 @@ export default function AdminFacultiesPage() {
         f.buildingName.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // ---- Shared form fields ----
-  const FacultyFormFields = () => (
-    <div className="p-6 flex flex-col gap-4">
-      {formError && (
-        <div className="p-3.5 bg-rose-50 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-900 text-rose-700 dark:text-rose-400 rounded-xl text-xs font-semibold flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>{formError}</span>
-        </div>
-      )}
-
-      <div>
-        <Label htmlFor="faculty-name">
-          Faculty Name <span className="text-rose-500">*</span>
-        </Label>
-        <Input
-          id="faculty-name"
-          type="text"
-          required
-          value={formName}
-          onChange={(e) => setFormName(e.target.value)}
-          placeholder="e.g. Faculty of Technology"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="faculty-building">Building / Location Name</Label>
-        <Input
-          id="faculty-building"
-          type="text"
-          value={formBuildingName}
-          onChange={(e) => setFormBuildingName(e.target.value)}
-          placeholder="e.g. Spider Building"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="faculty-description">Description</Label>
-        <Textarea
-          id="faculty-description"
-          value={formDescription}
-          onChange={(e) => setFormDescription(e.target.value)}
-          placeholder="Enter details about the departments and core building complexes within this faculty..."
-          rows={4}
-        />
-      </div>
-    </div>
-  );
+  // ---- Shared form fields rendered by stable external component ----
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
@@ -337,7 +365,7 @@ export default function AdminFacultiesPage() {
         </div>
 
         {/* Faculties Table Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden overflow-x-auto">
           {/* Table Controls */}
           <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -386,16 +414,16 @@ export default function AdminFacultiesPage() {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/10 hover:bg-transparent dark:hover:bg-transparent">
-                  <TableHead>Faculty Details</TableHead>
-                  <TableHead>Building Location</TableHead>
-                  <TableHead className="text-right w-24">Last Score</TableHead>
-                  <TableHead className="text-center w-36">Actions</TableHead>
+                  <TableHead className="min-w-[220px]">Faculty Details</TableHead>
+                  <TableHead className="min-w-[160px]">Building Location</TableHead>
+                  <TableHead className="text-right w-28 shrink-0">Last Score</TableHead>
+                  <TableHead className="text-center w-32 shrink-0">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredFaculties.map((faculty) => (
                   <TableRow key={faculty.id}>
-                    <TableCell>
+                    <TableCell className="min-w-[220px]">
                       <p className="text-sm font-extrabold text-[#10386b] dark:text-slate-200 leading-tight">
                         {faculty.name}
                       </p>
@@ -405,7 +433,7 @@ export default function AdminFacultiesPage() {
                         </p>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <TableCell className="min-w-[160px] text-xs font-semibold text-slate-500 dark:text-slate-400">
                       {faculty.buildingName || "Main Complex"}
                     </TableCell>
                     <TableCell className="text-right text-sm font-black text-[#10386b] dark:text-white">
@@ -454,7 +482,15 @@ export default function AdminFacultiesPage() {
           </DialogHeader>
 
           <form onSubmit={handleCreateSubmit}>
-            <FacultyFormFields />
+            <FacultyFormFields
+              formError={formError}
+              formName={formName}
+              setFormName={setFormName}
+              formBuildingName={formBuildingName}
+              setFormBuildingName={setFormBuildingName}
+              formDescription={formDescription}
+              setFormDescription={setFormDescription}
+            />
             <DialogFooter>
               <Button
                 type="button"
@@ -486,7 +522,15 @@ export default function AdminFacultiesPage() {
           </DialogHeader>
 
           <form onSubmit={handleEditSubmit}>
-            <FacultyFormFields />
+            <FacultyFormFields
+              formError={formError}
+              formName={formName}
+              setFormName={setFormName}
+              formBuildingName={formBuildingName}
+              setFormBuildingName={setFormBuildingName}
+              formDescription={formDescription}
+              setFormDescription={setFormDescription}
+            />
             <DialogFooter>
               <Button
                 type="button"

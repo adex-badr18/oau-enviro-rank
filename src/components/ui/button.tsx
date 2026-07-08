@@ -11,7 +11,7 @@ const buttonVariants = cva(
         default:
           "bg-[#fcb900] text-slate-900 shadow-md hover:bg-[#e2a600] focus-visible:ring-[#fcb900]",
         destructive:
-          "bg-rose-600 text-white shadow-md hover:bg-rose-700 focus-visible:ring-rose-600",
+          "bg-rose-600 text-[#ffffff] shadow-md hover:bg-rose-700 focus-visible:ring-rose-600",
         outline:
           "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-850",
         ghost:
