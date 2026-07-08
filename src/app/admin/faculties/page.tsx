@@ -330,11 +330,11 @@ export default function AdminFacultiesPage() {
                   Obafemi Awolowo University, Ile-Ife
                 </span>
                 <span className="text-slate-300">|</span>
-                <span className="inline-flex items-center gap-1 text-[#fcb900] text-xs font-black uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1 text-brand-gold text-xs font-black uppercase tracking-wider">
                   Admin Dashboard
                 </span>
               </div>
-              <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight mt-0.5">
+              <h1 className="text-3xl font-extrabold text-brand-navy dark:text-white tracking-tight mt-0.5">
                 Manage Faculties
               </h1>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -347,14 +347,14 @@ export default function AdminFacultiesPage() {
               href="/admin/inspect"
               className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-300 transition-all duration-200"
             >
-              <ClipboardList className="h-4 w-4 text-[#10386b] dark:text-[#fcb900]" />
+              <ClipboardList className="h-4 w-4 text-brand-navy dark:text-brand-gold" />
               New Inspection
             </a>
             <a
               href="/admin/reports"
               className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-300 transition-all duration-200"
             >
-              <FileSpreadsheet className="h-4 w-4 text-[#10386b] dark:text-[#fcb900]" />
+              <FileSpreadsheet className="h-4 w-4 text-brand-navy dark:text-brand-gold" />
               Excel Reports
             </a>
             <Button onClick={handleOpenCreate} size="default">
@@ -369,7 +369,7 @@ export default function AdminFacultiesPage() {
           {/* Table Controls */}
           <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold text-[#10386b] dark:text-white flex items-center gap-2">
+              <h2 className="text-lg font-bold text-brand-navy dark:text-white flex items-center gap-2">
                 Faculty Roster ({filteredFaculties.length})
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -383,7 +383,7 @@ export default function AdminFacultiesPage() {
                 placeholder="Search by name or building..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 h-10 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] text-slate-700 dark:text-slate-300"
+                className="w-full pl-10 pr-4 h-10 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold text-slate-700 dark:text-slate-300"
               />
             </div>
           </div>
@@ -391,7 +391,7 @@ export default function AdminFacultiesPage() {
           {/* Table Body */}
           {loading ? (
             <div className="p-16 flex flex-col items-center justify-center text-slate-400">
-              <Loader2 className="h-8 w-8 animate-spin text-[#fcb900] mb-3" />
+              <Loader2 className="h-8 w-8 animate-spin text-brand-gold mb-3" />
               <span className="text-sm font-semibold">Loading faculties database...</span>
             </div>
           ) : error ? (
@@ -400,7 +400,7 @@ export default function AdminFacultiesPage() {
               <span className="text-sm font-bold text-rose-500">{error}</span>
               <button
                 onClick={loadFaculties}
-                className="mt-4 px-4 py-2 text-xs font-semibold text-[#10386b] dark:text-[#fcb900] hover:underline"
+                className="mt-4 px-4 py-2 text-xs font-semibold text-brand-navy dark:text-brand-gold hover:underline"
               >
                 Try Again
               </button>
@@ -424,7 +424,7 @@ export default function AdminFacultiesPage() {
                 {filteredFaculties.map((faculty) => (
                   <TableRow key={faculty.id}>
                     <TableCell className="min-w-[220px]">
-                      <p className="text-sm font-extrabold text-[#10386b] dark:text-slate-200 leading-tight">
+                      <p className="text-sm font-extrabold text-brand-navy dark:text-slate-200 leading-tight">
                         {faculty.name}
                       </p>
                       {faculty.description && (
@@ -436,7 +436,7 @@ export default function AdminFacultiesPage() {
                     <TableCell className="min-w-[160px] text-xs font-semibold text-slate-500 dark:text-slate-400">
                       {faculty.buildingName || "Main Complex"}
                     </TableCell>
-                    <TableCell className="text-right text-sm font-black text-[#10386b] dark:text-white">
+                    <TableCell className="text-right text-sm font-black text-brand-navy dark:text-white">
                       {faculty.currentScore.toFixed(1)}%
                     </TableCell>
                     <TableCell className="text-center">
@@ -473,7 +473,7 @@ export default function AdminFacultiesPage() {
         <DialogContent className="max-w-lg p-0">
           <DialogHeader>
             <DialogTitle>
-              <Building2 className="h-5 w-5 text-[#fcb900]" />
+              <Building2 className="h-5 w-5 text-brand-gold" />
               Add New Faculty
             </DialogTitle>
             <DialogDescription>
@@ -513,7 +513,7 @@ export default function AdminFacultiesPage() {
         <DialogContent className="max-w-lg p-0">
           <DialogHeader>
             <DialogTitle>
-              <Edit2 className="h-5 w-5 text-[#fcb900]" />
+              <Edit2 className="h-5 w-5 text-brand-gold" />
               Edit Faculty Details
             </DialogTitle>
             <DialogDescription>
