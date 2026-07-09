@@ -1,3 +1,4 @@
+import "dotenv/config";
 process.env.BYPASS_AUTH_FOR_TEST = "true";
 import { GET as getFaculties, POST as createFaculty } from "@/app/api/faculties/route";
 import { PATCH as updateFaculty, DELETE as deleteFaculty } from "@/app/api/faculties/[id]/route";

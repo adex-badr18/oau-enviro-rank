@@ -1,8 +1,6 @@
+import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
-import path from "path";
-
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+import { prisma } from "./db";
 
 const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseUrl = rawSupabaseUrl ? rawSupabaseUrl.replace(/\/rest\/v1\/?$/, "") : undefined;
@@ -26,32 +24,25 @@ async function main() {
     const email = "superadmin@oau.edu.ng";
     const password = "password123";
 
-    // Check if profile/user already exists
-    const { data: profiles, error: fetchError } = await supabase
-        .from("profiles")
-        .select("id, email, role")
-        .eq("email", email);
+    // Check if profile/user already exists in local database using Prisma
+    const existingProfile = await prisma.profile.findFirst({
+        where: { email }
+    });
 
-    if (fetchError) {
-        console.error("Error fetching profiles:", fetchError);
-        process.exit(1);
-    }
-
-    if (profiles && profiles.length > 0) {
-        console.log("Superadmin profile already exists in DB:", profiles[0]);
+    if (existingProfile) {
+        console.log("Superadmin profile already exists in DB:", existingProfile);
 
         // Ensure the role is superadmin
-        if (profiles[0].role !== "superadmin") {
+        if (existingProfile.role !== "superadmin") {
             console.log("Updating role to superadmin...");
-            const { error: updateError } = await supabase
-                .from("profiles")
-                .update({ role: "superadmin" })
-                .eq("id", profiles[0].id);
-
-            if (updateError) {
-                console.error("Error updating profile role:", updateError);
-            } else {
+            try {
+                await prisma.profile.update({
+                    where: { id: existingProfile.id },
+                    data: { role: "superadmin" }
+                });
                 console.log("Successfully updated role to superadmin.");
+            } catch (updateError: any) {
+                console.error("Error updating profile role:", updateError);
             }
         }
         return;
@@ -72,16 +63,16 @@ async function main() {
 
     console.log("Successfully created auth user:", newUser.user.id);
 
-    console.log("Creating public profile...");
-    const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-            id: newUser.user.id,
-            email,
-            role: "superadmin",
+    console.log("Creating public profile in local database using Prisma...");
+    try {
+        await prisma.profile.create({
+            data: {
+                id: newUser.user.id,
+                email,
+                role: "superadmin",
+            }
         });
-
-    if (profileError) {
+    } catch (profileError: any) {
         console.error("Failed to create public.profiles entry:", profileError);
         // clean up
         await supabase.auth.admin.deleteUser(newUser.user.id);

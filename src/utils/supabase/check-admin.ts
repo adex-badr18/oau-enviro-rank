@@ -1,5 +1,6 @@
 import { createClient } from './server'
 import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
 
 export async function checkSuperadmin() {
   if (process.env.BYPASS_AUTH_FOR_TEST === 'true') {
@@ -20,13 +21,12 @@ export async function checkSuperadmin() {
       }
     }
 
-    const { data: profile, error: profileError } = await (supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single() as any)
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { role: true },
+    })
 
-    if (profileError || !profile || profile.role !== 'superadmin') {
+    if (!profile || profile.role !== 'superadmin') {
       return { 
         authorized: false, 
         response: NextResponse.json({ error: 'Forbidden: Superadmin access required' }, { status: 403 }) 
