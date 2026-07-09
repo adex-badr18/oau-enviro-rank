@@ -2,6 +2,7 @@ import { createClient as createServerClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
+import { prisma } from '@/lib/db'
 
 const createUserSchema = z.object({
   email: z.string().email(),
@@ -22,14 +23,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch requester's profile to verify if they are a superadmin
-    const { data: profile, error: profileError } = await (supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', requester.id)
-      .single() as any)
+    // Fetch requester's profile to verify if they are a superadmin using Prisma
+    const profile = await prisma.profile.findUnique({
+      where: { id: requester.id },
+      select: { role: true },
+    })
 
-    if (profileError || !profile || profile.role !== 'superadmin') {
+    if (!profile || profile.role !== 'superadmin') {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
         { status: 403 }
@@ -64,18 +64,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 4. Insert their profile into public.profiles
-    const { data: newProfile, error: createProfileError } = await (adminClient
-      .from('profiles')
-      .insert({
-        id: newAuthUser.user.id,
-        email: newAuthUser.user.email!,
-        role,
+    // 4. Insert their profile into public.profiles using Prisma
+    let newProfile
+    try {
+      newProfile = await prisma.profile.create({
+        data: {
+          id: newAuthUser.user.id,
+          email: newAuthUser.user.email!,
+          role,
+        },
       })
-      .select()
-      .single() as any)
-
-    if (createProfileError) {
+    } catch (createProfileError: any) {
       // Clean up the auth user to keep auth in sync
       await adminClient.auth.admin.deleteUser(newAuthUser.user.id)
       return NextResponse.json(

@@ -58,14 +58,22 @@ export async function updateSession(request: NextRequest) {
       }
     }
 
-    // User is logged in, check their role
-    const { data: profile } = await (supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single() as any)
-
-    const isSuperadmin = profile?.role === 'superadmin'
+    // User is logged in, check their role via local API endpoint to bridge split db architecture
+    let isSuperadmin = false
+    try {
+      const roleCheckUrl = new URL('/api/auth/role', request.url)
+      const roleRes = await fetch(roleCheckUrl, {
+        headers: {
+          cookie: request.headers.get('cookie') || '',
+        },
+      })
+      if (roleRes.ok) {
+        const { role } = await roleRes.json()
+        isSuperadmin = role === 'superadmin'
+      }
+    } catch (err) {
+      console.error('Middleware role check error:', err)
+    }
 
     if (!isSuperadmin) {
       if (isAdminPath) {
