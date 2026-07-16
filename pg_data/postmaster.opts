@@ -1,1 +1,0 @@
-/usr/lib/postgresql/16/bin/postgres "-D" "pg_data" "-p" "5433" "-c" "unix_socket_directories=."

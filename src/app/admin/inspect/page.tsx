@@ -262,11 +262,11 @@ export default function AdminInspectPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-sans">
         <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 text-center animate-in fade-in zoom-in-95 duration-300">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#fcb900]/10 text-[#fcb900] mb-6">
-            <CheckCircle className="h-10 w-10 text-[#fcb900]" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold mb-6">
+            <CheckCircle className="h-10 w-10 text-brand-gold" />
           </div>
 
-          <h2 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight">
+          <h2 className="text-3xl font-extrabold text-brand-navy dark:text-white tracking-tight">
             Inspection Logged!
           </h2>
           <p className="mt-3 text-slate-500 dark:text-slate-400 max-w-md mx-auto text-sm">
@@ -274,8 +274,8 @@ export default function AdminInspectPage() {
           </p>
 
           <div className="mt-8 bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-6 border border-slate-150 dark:border-slate-800 text-left">
-            <h3 className="text-lg font-bold text-[#10386b] dark:text-white flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-2">
-              <Award className="h-5 w-5 text-[#fcb900]" />
+            <h3 className="text-lg font-bold text-brand-navy dark:text-white flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-slate-700/50 pb-2">
+              <Award className="h-5 w-5 text-brand-gold" />
               Updated Score Summary
             </h3>
 
@@ -294,7 +294,7 @@ export default function AdminInspectPage() {
 
               <div className="flex flex-col items-center md:items-end justify-center bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recalculated Score</span>
-                <span className="text-5xl font-black text-[#10386b] dark:text-[#fcb900] mt-1">
+                <span className="text-5xl font-black text-brand-navy dark:text-brand-gold mt-1">
                   {scoreBreakdown.finalScore}%
                 </span>
               </div>
@@ -307,10 +307,10 @@ export default function AdminInspectPage() {
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
                     <span className="text-slate-500 dark:text-slate-400">Official Committee Audit (70% weight)</span>
-                    <span className="text-[#10386b] dark:text-slate-200">{scoreBreakdown.officialNormalized}%</span>
+                    <span className="text-brand-navy dark:text-slate-200">{scoreBreakdown.officialNormalized}%</span>
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                    <div className="bg-[#10386b] h-full rounded-full" style={{ width: `${scoreBreakdown.officialNormalized}%` }} />
+                    <div className="bg-brand-navy h-full rounded-full" style={{ width: `${scoreBreakdown.officialNormalized}%` }} />
                   </div>
                 </div>
 
@@ -318,10 +318,10 @@ export default function AdminInspectPage() {
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
                     <span className="text-slate-500 dark:text-slate-400">Staff Opinion Poll (20% weight - {scoreBreakdown.totalStaffVotes} votes)</span>
-                    <span className="text-[#10386b] dark:text-slate-200">{scoreBreakdown.staffNormalized}%</span>
+                    <span className="text-brand-navy dark:text-slate-200">{scoreBreakdown.staffNormalized}%</span>
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                    <div className="bg-[#fcb900] h-full rounded-full" style={{ width: `${scoreBreakdown.staffNormalized}%` }} />
+                    <div className="bg-brand-gold h-full rounded-full" style={{ width: `${scoreBreakdown.staffNormalized}%` }} />
                   </div>
                 </div>
 
@@ -329,7 +329,7 @@ export default function AdminInspectPage() {
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-1">
                     <span className="text-slate-500 dark:text-slate-400">Student Feedback (10% weight - {scoreBreakdown.totalStudentVotes} votes)</span>
-                    <span className="text-[#10386b] dark:text-slate-200">{scoreBreakdown.studentNormalized}%</span>
+                    <span className="text-brand-navy dark:text-slate-200">{scoreBreakdown.studentNormalized}%</span>
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
                     <div className="bg-slate-400 h-full rounded-full" style={{ width: `${scoreBreakdown.studentNormalized}%` }} />
@@ -345,7 +345,7 @@ export default function AdminInspectPage() {
                 setSuccessData(null);
                 setValue("facultyId", "");
               }}
-              className="flex-1 max-w-xs h-12 inline-flex items-center justify-center rounded-xl bg-[#10386b] hover:bg-[#0c2a52] text-white font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#fcb900] shadow-md shadow-slate-200 dark:shadow-none"
+              className="flex-1 max-w-xs h-12 inline-flex items-center justify-center rounded-xl bg-brand-navy hover:bg-[#0c2a52] text-white font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-gold shadow-md shadow-slate-200 dark:shadow-none"
             >
               Log New Scorecard
             </button>
@@ -369,7 +369,7 @@ export default function AdminInspectPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Navigation / Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
           <div className="flex items-center gap-4">
@@ -378,9 +378,9 @@ export default function AdminInspectPage() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-slate-455 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
                 <span className="text-slate-300">|</span>
-                <span className="inline-flex items-center gap-1 text-[#fcb900] text-xs font-black uppercase tracking-wider">Inspection Panel</span>
+                <span className="inline-flex items-center gap-1 text-brand-gold text-xs font-black uppercase tracking-wider">Inspection Panel</span>
               </div>
-              <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight mt-0.5">
+              <h1 className="text-3xl font-extrabold text-brand-navy dark:text-white tracking-tight mt-0.5">
                 Official Inspection Scorecard
               </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -393,14 +393,14 @@ export default function AdminInspectPage() {
               href="/admin/faculties"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200"
             >
-              <Building2 className="h-4 w-4 text-[#10386b] dark:text-[#fcb900]" />
+              <Building2 className="h-4 w-4 text-brand-navy dark:text-brand-gold" />
               Manage Faculties
             </a>
             <a
               href="/admin/reports"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200"
             >
-              <FileSpreadsheet className="h-4 w-4 text-[#10386b] dark:text-[#fcb900]" />
+              <FileSpreadsheet className="h-4 w-4 text-brand-navy dark:text-brand-gold" />
               Reports Board
             </a>
           </div>
@@ -422,7 +422,7 @@ export default function AdminInspectPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Faculty Selector Box */}
             <div className="md:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative">
-              <label className="text-xs font-bold text-[#10386b] dark:text-slate-250 uppercase tracking-widest block mb-2">
+              <label className="text-xs font-bold text-brand-navy dark:text-slate-250 uppercase tracking-widest block mb-2">
                 Target Faculty
               </label>
 
@@ -430,7 +430,7 @@ export default function AdminInspectPage() {
                 <button
                   type="button"
                   onClick={() => setDropdownOpen((prev) => !prev)}
-                  className="w-full flex justify-between items-center px-4 h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-left text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] transition-colors"
+                  className="w-full flex justify-between items-center px-4 h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-left text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold transition-colors"
                 >
                   <span className="truncate">
                     {selectedFaculty ? selectedFaculty.name : "Select audit target faculty..."}
@@ -454,7 +454,7 @@ export default function AdminInspectPage() {
                     <div className="overflow-y-auto flex-1 py-1 max-h-[160px]">
                       {facultiesLoading ? (
                         <div className="p-3 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin text-[#fcb900]" />
+                          <Loader2 className="h-4 w-4 animate-spin text-brand-gold" />
                           Loading...
                         </div>
                       ) : facultiesError ? (
@@ -478,7 +478,7 @@ export default function AdminInspectPage() {
                             }}
                             className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${
                               selectedFacultyId === f.id
-                                ? "bg-[#10386b] text-white"
+                                ? "bg-brand-navy text-white"
                                 : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                             }`}
                           >
@@ -499,7 +499,7 @@ export default function AdminInspectPage() {
 
             {/* Assessment Period Box */}
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <label className="text-xs font-bold text-[#10386b] dark:text-slate-250 uppercase tracking-widest block mb-2">
+              <label className="text-xs font-bold text-brand-navy dark:text-slate-250 uppercase tracking-widest block mb-2">
                 Assessment Period
               </label>
               <div className="flex gap-2">
@@ -510,7 +510,7 @@ export default function AdminInspectPage() {
                     render={({ field }) => (
                       <select
                         {...field}
-                        className="w-full px-3 h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900]"
+                        className="w-full px-3 h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold"
                       >
                         {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                           <option key={m} value={m}>
@@ -531,7 +531,7 @@ export default function AdminInspectPage() {
                         type="number"
                         min="2000"
                         max="2100"
-                        className="w-full px-3 h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-sm text-slate-700 dark:text-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900]"
+                        className="w-full px-3 h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-sm text-slate-700 dark:text-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold"
                       />
                     )}
                   />
@@ -545,7 +545,7 @@ export default function AdminInspectPage() {
             {/* Header / Scoring summary */}
             <div className="p-6 bg-slate-50 dark:bg-slate-850/50 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-[#10386b] dark:text-white">
+                <h2 className="text-lg font-bold text-brand-navy dark:text-white">
                   Inspection Scoresheet
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -557,12 +557,12 @@ export default function AdminInspectPage() {
               <div className="flex items-center gap-4 shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-2.5 px-4 shadow-sm">
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase block leading-none">Running Total</span>
-                  <span className="text-2xl font-black text-[#10386b] dark:text-[#fcb900] mt-1 inline-block">
+                  <span className="text-2xl font-black text-brand-navy dark:text-brand-gold mt-1 inline-block">
                     {runningTotal} <span className="text-xs font-semibold text-slate-400">/ 100</span>
                   </span>
                 </div>
                 <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center text-xs font-bold text-slate-400">
-                  <TrendingUp className="h-5 w-5 text-[#fcb900]" />
+                  <TrendingUp className="h-5 w-5 text-brand-gold" />
                 </div>
               </div>
             </div>
@@ -579,7 +579,7 @@ export default function AdminInspectPage() {
                         <label className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight">
                           {item.label}
                         </label>
-                        <span className="text-xs font-black px-2 py-0.5 rounded-full bg-[#10386b]/10 text-[#10386b] dark:bg-[#fcb900]/10 dark:text-[#fcb900] shrink-0">
+                        <span className="text-xs font-black px-2 py-0.5 rounded-full bg-brand-navy/10 text-brand-navy dark:bg-brand-gold/10 dark:text-brand-gold shrink-0">
                           Max {item.max}
                         </span>
                       </div>
@@ -610,7 +610,7 @@ export default function AdminInspectPage() {
                                   }
                                   field.onChange(val);
                                 }}
-                                className="w-full h-11 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-150 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] text-right"
+                                className="w-full h-11 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-150 focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold text-right"
                               />
                             </div>
                           )}
@@ -641,7 +641,7 @@ export default function AdminInspectPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-12 px-8 inline-flex items-center justify-center gap-2 rounded-xl bg-[#10386b] hover:bg-[#0c2a52] text-white font-bold transition-all duration-200 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#fcb900] shadow-md shadow-slate-200 dark:shadow-none"
+                className="h-12 px-8 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-navy hover:bg-[#0c2a52] text-white font-bold transition-all duration-200 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-brand-gold shadow-md shadow-slate-200 dark:shadow-none"
               >
                 {isSubmitting ? (
                   <>

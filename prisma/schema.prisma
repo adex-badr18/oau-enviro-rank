@@ -68,11 +68,12 @@ enum UserRoleEnum {
 }
 
 model Profile {
-  id        String       @id @db.Uuid
-  email     String
-  role      UserRoleEnum @default(user)
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt @map("updated_at")
+  id           String       @id @default(uuid()) @db.Uuid
+  email        String       @unique
+  passwordHash String       @map("password_hash")
+  role         UserRoleEnum @default(user)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
 
   @@map("profiles")
 }

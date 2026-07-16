@@ -1,8 +1,50 @@
-import { type NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
+import { NextResponse, type NextRequest } from 'next/server';
+import { verifyToken } from '@/lib/auth-session';
 
 export async function proxy(request: NextRequest) {
-  return await updateSession(request)
+  let response = NextResponse.next({
+    request,
+  });
+
+  if (process.env.BYPASS_AUTH_FOR_TEST === 'true') {
+    return response;
+  }
+
+  const pathname = request.nextUrl.pathname;
+  const isAdminPath = pathname.startsWith('/admin');
+  const isAdminApiPath = pathname.startsWith('/api/admin');
+  
+  // Protect faculty mutations and inspect API
+  const isFacultyMutation = pathname.startsWith('/api/faculties') && 
+    ['POST', 'PATCH', 'DELETE'].includes(request.method);
+  const isInspectMutation = pathname.startsWith('/api/inspect') && 
+    ['POST', 'PATCH', 'DELETE'].includes(request.method);
+
+  const isProtectedPath = isAdminPath || isAdminApiPath || isFacultyMutation || isInspectMutation;
+
+  if (isProtectedPath) {
+    const token = request.cookies.get('oau_session')?.value;
+    let isSuperadmin = false;
+
+    if (token) {
+      const payload = verifyToken(token);
+      if (payload && payload.role === 'superadmin') {
+        isSuperadmin = true;
+      }
+    }
+
+    if (!isSuperadmin) {
+      if (isAdminPath) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('redirectTo', pathname);
+        return NextResponse.redirect(loginUrl);
+      } else {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+  }
+
+  return response;
 }
 
 export const config = {

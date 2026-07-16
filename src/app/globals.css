@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source not "../../pg_data";
 
 :root {
   --background: #ffffff;

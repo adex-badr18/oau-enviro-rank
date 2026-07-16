@@ -1,6 +1,6 @@
-import { createClient } from './server'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { verifyToken } from '@/lib/auth-session'
 
 export async function checkSuperadmin() {
   if (process.env.BYPASS_AUTH_FOR_TEST === 'true') {
@@ -8,34 +8,30 @@ export async function checkSuperadmin() {
   }
 
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const cookieStore = await cookies()
+    const token = cookieStore.get('oau_session')?.value
 
-    if (authError || !user) {
+    if (!token) {
       return { 
         authorized: false, 
         response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) 
       }
     }
 
-    const profile = await prisma.profile.findUnique({
-      where: { id: user.id },
-      select: { role: true },
-    })
+    const payload = verifyToken(token)
 
-    if (!profile || profile.role !== 'superadmin') {
+    if (!payload || payload.role !== 'superadmin') {
       return { 
         authorized: false, 
         response: NextResponse.json({ error: 'Forbidden: Superadmin access required' }, { status: 403 }) 
       }
     }
 
-    return { authorized: true, user }
+    return { authorized: true, user: payload }
   } catch (error: any) {
-    console.error('Error checking superadmin role:', error)
+    if (error && typeof error.message === 'string' && !error.message.includes('outside a request scope')) {
+      console.error('Error checking superadmin role:', error)
+    }
     return { 
       authorized: false, 
       response: NextResponse.json({ error: 'Internal Server Error', message: error.message }, { status: 500 }) 

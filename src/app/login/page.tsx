@@ -2,13 +2,11 @@
 
 import React, { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
 import { Shield, Lock, Mail, Key, Loader2, ArrowRight } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,21 +18,18 @@ function LoginForm() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await (supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single() as any);
-
-        if (profile?.role === "superadmin") {
+      try {
+        const res = await fetch("/api/auth/role");
+        const data = await res.json();
+        if (data.role === "superadmin") {
           router.push(redirectTo);
         }
+      } catch (err) {
+        console.error("Check session error:", err);
       }
     };
     checkSession();
-  }, [router, supabase, redirectTo]);
+  }, [router, redirectTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,24 +38,18 @@ function LoginForm() {
     setSuccessMsg("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      // Verify if user is superadmin
-      const { data: profile, error: profileError } = await (supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .single() as any);
-
-      if (profileError || !profile || profile.role !== "superadmin") {
-        // Sign out user since they are not a superadmin
-        await supabase.auth.signOut();
-        throw new Error("Forbidden: Superadmin access required.");
+      if (!res.ok) {
+        throw new Error(data.message || "Invalid credentials or unauthorized access.");
       }
 
       setSuccessMsg("Authenticated successfully! Redirecting...");
