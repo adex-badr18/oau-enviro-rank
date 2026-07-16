@@ -4,15 +4,15 @@ import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { 
-  Building2, 
-  ChevronLeft, 
-  ChevronRight, 
-  Check, 
-  UserCheck, 
-  Sparkles, 
-  CheckCircle2, 
-  Loader2, 
+import {
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  UserCheck,
+  Sparkles,
+  CheckCircle2,
+  Loader2,
   Search,
   Users,
   Award
@@ -199,7 +199,7 @@ export default function SurveyPage() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [facultiesLoading, setFacultiesLoading] = useState<boolean>(true);
   const [facultiesError, setFacultiesError] = useState<string | null>(null);
-  
+
   // Combobox Search State
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -215,12 +215,26 @@ export default function SurveyPage() {
     trigger,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<SurveyFormValues>({
     resolver: zodResolver(surveyFormSchema),
     defaultValues: {
+      role: "STUDENT",
+      facultyId: "",
       respondentId: "",
-    },
+      cleanliness: undefined,
+      landscape: undefined,
+      wasteDisposal: undefined,
+      restrooms: undefined,
+      infrastructure: undefined,
+      drainage: undefined,
+      sustainability: undefined,
+      behavior: undefined,
+      sanitationExercises: undefined,
+      safety: undefined,
+      innovation: undefined,
+    } as any,
     mode: "onTouched",
   });
 
@@ -362,10 +376,10 @@ export default function SurveyPage() {
     return (
       <div className="flex-1 bg-zinc-50 dark:bg-[#090b10] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center font-sans">
         <div className="w-full max-w-2xl bg-white dark:bg-[#11141e] rounded-3xl shadow-xl border border-zinc-100 dark:border-zinc-800/80 overflow-hidden relative p-8 text-center animate-in fade-in zoom-in-95 duration-500">
-          
+
           {/* Confetti decoration styling */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-brand-navy via-brand-gold to-brand-navy w-full" />
-          
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-1 bg-linear-to-r from-brand-navy via-brand-gold to-brand-navy w-full" />
+
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold mb-6 relative">
             <CheckCircle2 className="h-10 w-10 animate-bounce" />
           </div>
@@ -382,12 +396,12 @@ export default function SurveyPage() {
               <Award className="h-5 w-5 text-brand-gold" />
               Recalculated Score Card
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
               <div>
                 <p className="text-sm font-medium text-zinc-400 dark:text-zinc-500">FACULTY</p>
                 <p className="text-xl font-bold text-zinc-800 dark:text-zinc-200 truncate mt-1">{faculty.name}</p>
-                
+
                 <p className="text-sm font-medium text-zinc-400 dark:text-zinc-500 mt-4">PERFORMANCE RATING</p>
                 <div className="mt-1">
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold border ${getRatingBadgeClass(scoreBreakdown.rating)}`}>
@@ -448,8 +462,7 @@ export default function SurveyPage() {
               onClick={() => {
                 setSubmitResult(null);
                 setStep(1);
-                setValue("facultyId", "");
-                setValue("role", "STUDENT");
+                reset();
               }}
               className="flex-1 max-w-xs h-12 inline-flex items-center justify-center rounded-xl bg-brand-navy hover:bg-brand-navy-light text-white font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-gold shadow-md active:scale-[0.98]"
             >
@@ -478,8 +491,8 @@ export default function SurveyPage() {
     return (
       <div className="space-y-8 animate-in fade-in duration-300">
         {currentQuestions.map((q) => (
-          <div 
-            key={q.id} 
+          <div
+            key={q.id}
             className="p-6 bg-zinc-50/50 dark:bg-[#181d2a]/50 rounded-2xl border border-zinc-100 dark:border-zinc-800/80 shadow-sm"
           >
             <div className="mb-4">
@@ -495,9 +508,9 @@ export default function SurveyPage() {
               name={q.id}
               control={control}
               render={({ field }) => (
-                <div 
-                  role="radiogroup" 
-                  aria-label={q.title} 
+                <div
+                  role="radiogroup"
+                  aria-label={q.title}
                   className="grid grid-cols-1 gap-3 sm:grid-cols-5"
                 >
                   {q.options.map((opt) => {
@@ -507,18 +520,16 @@ export default function SurveyPage() {
                         key={opt.score}
                         type="button"
                         onClick={() => field.onChange(opt.score)}
-                        className={`text-left p-4 rounded-xl border transition-all duration-200 relative flex flex-col justify-between min-h-[105px] focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold ${
-                          isSelected
+                        className={`text-left p-4 rounded-xl border transition-all duration-200 relative flex flex-col justify-between min-h-[105px] focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold ${isSelected
                             ? "bg-brand-navy/5 dark:bg-brand-navy/20 border-brand-navy dark:border-brand-gold shadow-md"
                             : "bg-white dark:bg-[#11141e] border-zinc-200 dark:border-zinc-800/70 hover:border-zinc-300 dark:hover:border-zinc-700"
-                        }`}
+                          }`}
                       >
                         <div className="flex justify-between items-center w-full">
-                          <span className={`h-7 w-7 rounded-full flex items-center justify-center text-sm font-extrabold transition-colors duration-200 ${
-                            isSelected
+                          <span className={`h-7 w-7 rounded-full flex items-center justify-center text-sm font-extrabold transition-colors duration-200 ${isSelected
                               ? "bg-brand-navy dark:bg-brand-gold text-white dark:text-brand-navy"
                               : "bg-zinc-100 dark:bg-zinc-850 text-zinc-500 dark:text-zinc-400"
-                          }`}>
+                            }`}>
                             {opt.score}
                           </span>
                           {isSelected && (
@@ -526,9 +537,8 @@ export default function SurveyPage() {
                           )}
                         </div>
                         <div className="mt-3">
-                          <p className={`text-sm font-bold leading-none ${
-                            isSelected ? "text-brand-navy dark:text-brand-gold" : "text-zinc-700 dark:text-zinc-300"
-                          }`}>
+                          <p className={`text-sm font-bold leading-none ${isSelected ? "text-brand-navy dark:text-brand-gold" : "text-zinc-700 dark:text-zinc-300"
+                            }`}>
                             {opt.label}
                           </p>
                           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-snug">
@@ -554,9 +564,9 @@ export default function SurveyPage() {
 
   return (
     <div className="flex-1 bg-zinc-50 dark:bg-[#090b10] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center font-sans">
-      
+
       {/* Brand Heading */}
-      <div className="w-full max-w-6xl text-center mb-8 flex flex-col items-center">
+      <div className="w-full max-w-8/10 text-center mb-8 flex flex-col items-center">
         <div className="flex items-center gap-3 mb-4 bg-white dark:bg-[#11141e] border border-zinc-200 dark:border-zinc-800 rounded-2xl py-2 px-4 shadow-sm">
           <img src="/oau-logo.png" alt="OAU Logo" className="h-10 w-10 object-contain" />
           <div className="text-left">
@@ -572,14 +582,14 @@ export default function SurveyPage() {
         </p>
       </div>
 
-      <div className="w-full max-w-6xl bg-white dark:bg-[#11141e] rounded-3xl shadow-xl border border-zinc-150 dark:border-zinc-800/80 overflow-hidden flex flex-col md:flex-row min-h-[580px]">
-        
+      <div className="w-full max-w-8/10 bg-white dark:bg-[#11141e] rounded-3xl shadow-xl border border-zinc-150 dark:border-zinc-800/80 overflow-hidden flex flex-col md:flex-row min-h-[580px]">
+
         {/* Left Side: Step Tracker Panel (Desktop sidebar) */}
-        <div className="md:w-1/3 bg-brand-navy p-6 md:p-8 text-white flex flex-col justify-between border-r border-brand-navy-light relative overflow-hidden">
-          
+        <div className="md:w-1/4 bg-brand-navy p-6 md:p-8 text-white flex flex-col justify-between border-r border-brand-navy-light relative overflow-hidden">
+
           {/* Subtle logo vector effect in background */}
           <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/5 blur-xl pointer-events-none" />
-          
+
           <div>
             <div className="flex items-center gap-3 mb-8 bg-white/5 border border-white/10 rounded-2xl p-2.5">
               <img src="/oau-logo.png" alt="OAU Logo" className="h-10 w-10 object-contain bg-white/10 rounded-lg p-1" />
@@ -596,13 +606,12 @@ export default function SurveyPage() {
                 const isCompleted = step > stepNum;
                 return (
                   <div key={idx} className="flex gap-3 items-center group">
-                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-300 ${
-                      isActive 
-                        ? "bg-brand-gold text-brand-navy border-brand-gold shadow-md shadow-brand-gold/20 scale-105" 
+                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-300 ${isActive
+                        ? "bg-brand-gold text-brand-navy border-brand-gold shadow-md shadow-brand-gold/20 scale-105"
                         : isCompleted
-                        ? "bg-white text-brand-navy border-white"
-                        : "bg-transparent text-white/50 border-white/20"
-                    }`}>
+                          ? "bg-white text-brand-navy border-white"
+                          : "bg-transparent text-white/50 border-white/20"
+                      }`}>
                       {isCompleted ? <Check className="h-4 w-4" /> : stepNum}
                     </div>
                     <div className="text-left">
@@ -633,7 +642,7 @@ export default function SurveyPage() {
 
         {/* Right Side: Form Body */}
         <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
-          
+
           {/* Progress bar at the top */}
           <div className="mb-6">
             <div className="flex justify-between items-center text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-2">
@@ -641,15 +650,15 @@ export default function SurveyPage() {
               <span>{Math.round(((step - 1) / 4) * 100)}% Complete</span>
             </div>
             <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
-              <div 
-                className="bg-brand-gold h-full rounded-full transition-all duration-500 ease-out" 
+              <div
+                className="bg-brand-gold h-full rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${((step - 1) / 4) * 100}%` }}
               />
             </div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col justify-between">
-            
+
             {/* Step 1 Content: Role & Faculty Select */}
             {step === 1 && (
               <div className="space-y-6 animate-in fade-in duration-300">
@@ -675,11 +684,10 @@ export default function SurveyPage() {
                         <button
                           type="button"
                           onClick={() => field.onChange("STUDENT")}
-                          className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold ${
-                            field.value === "STUDENT"
+                          className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold ${field.value === "STUDENT"
                               ? "bg-brand-navy/5 dark:bg-brand-navy/20 border-brand-navy dark:border-brand-gold shadow-md"
                               : "bg-white dark:bg-[#11141e] border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700"
-                          }`}
+                            }`}
                         >
                           <div className={`p-2.5 rounded-lg ${field.value === "STUDENT" ? "bg-brand-navy dark:bg-brand-gold text-white dark:text-brand-navy" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"}`}>
                             <Users className="h-5 w-5" />
@@ -693,11 +701,10 @@ export default function SurveyPage() {
                         <button
                           type="button"
                           onClick={() => field.onChange("STAFF")}
-                          className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold ${
-                            field.value === "STAFF"
+                          className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold ${field.value === "STAFF"
                               ? "bg-brand-navy/5 dark:bg-brand-navy/20 border-brand-navy dark:border-brand-gold shadow-md"
                               : "bg-white dark:bg-[#11141e] border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700"
-                          }`}
+                            }`}
                         >
                           <div className={`p-2.5 rounded-lg ${field.value === "STAFF" ? "bg-brand-navy dark:bg-brand-gold text-white dark:text-brand-navy" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"}`}>
                             <UserCheck className="h-5 w-5" />
@@ -775,11 +782,10 @@ export default function SurveyPage() {
                                   setDropdownOpen(false);
                                   trigger("facultyId");
                                 }}
-                                className={`w-full text-left px-4 py-3 text-xs flex justify-between items-center transition-colors duration-150 ${
-                                  selectedFacultyId === faculty.id
+                                className={`w-full text-left px-4 py-3 text-xs flex justify-between items-center transition-colors duration-150 ${selectedFacultyId === faculty.id
                                     ? "bg-brand-navy text-white"
                                     : "hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                                }`}
+                                  }`}
                               >
                                 <div>
                                   <p className="font-bold">{faculty.name}</p>
