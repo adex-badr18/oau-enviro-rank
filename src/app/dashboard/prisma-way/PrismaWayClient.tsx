@@ -22,7 +22,7 @@ import {
 interface Profile {
   id: string
   email: string
-  role: 'superadmin' | 'user'
+  role: 'superadmin' | 'admin'
   created_at: string
 }
 
@@ -86,16 +86,16 @@ export default function PrismaWayClient({
     }
   }
 
-  const toggleRole = async (targetProfileId: string, currentRole: 'superadmin' | 'user') => {
+  const toggleRole = async (targetProfileId: string, currentRole: 'superadmin' | 'admin') => {
     setActionLoadingId(targetProfileId)
     setErrorMsg('')
     setSuccessMsg('')
     
-    const newRole = currentRole === 'superadmin' ? 'user' : 'superadmin'
+    const newRole = currentRole === 'superadmin' ? 'admin' : 'superadmin'
     const result = await updateProfileRolePrisma(targetProfileId, newRole)
 
     if (result.success && result.data) {
-      const updatedRole = result.data.role === 'superadmin' ? 'superadmin' : 'user'
+      const updatedRole = result.data.role === 'superadmin' ? 'superadmin' : 'admin'
       
       // Update local profiles list
       if (profiles) {
@@ -222,7 +222,7 @@ export default function PrismaWayClient({
               <div className="text-left text-xs">
                 <span className="block font-bold text-slate-300">{user.email}</span>
                 <span className="block text-[10px] text-slate-400 uppercase font-black tracking-widest mt-0.5">
-                  {profile?.role || 'user'}
+                  {profile?.role || 'admin'}
                 </span>
               </div>
             </div>
@@ -291,7 +291,7 @@ export default function PrismaWayClient({
                 Created: {profile ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
               </span>
               <button
-                onClick={() => toggleRole(user.id, profile?.role || 'user')}
+                onClick={() => toggleRole(user.id, profile?.role || 'admin')}
                 disabled={actionLoadingId === user.id}
                 className="text-xs font-bold text-brand-gold flex items-center gap-1 hover:underline disabled:opacity-50 cursor-pointer"
               >

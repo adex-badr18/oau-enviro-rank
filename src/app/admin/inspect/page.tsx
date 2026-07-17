@@ -371,39 +371,13 @@ export default function AdminInspectPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-6xl mx-auto">
         {/* Navigation / Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
-          <div className="flex items-center gap-4">
-            <img src="/oau-logo.png" alt="OAU Logo" className="h-14 w-14 object-contain shrink-0" />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-slate-455 uppercase tracking-widest block">Obafemi Awolowo University, Ile-Ife</span>
-                <span className="text-slate-300">|</span>
-                <span className="inline-flex items-center gap-1 text-brand-gold text-xs font-black uppercase tracking-wider">Inspection Panel</span>
-              </div>
-              <h1 className="text-3xl font-extrabold text-brand-navy dark:text-white tracking-tight mt-0.5">
-                Official Inspection Scorecard
-              </h1>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Submit environmental audit scores evaluated by the Inspection Committee.
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 sm:mt-0 flex gap-3">
-            <a
-              href="/admin/faculties"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200"
-            >
-              <Building2 className="h-4 w-4 text-brand-navy dark:text-brand-gold" />
-              Manage Faculties
-            </a>
-            <a
-              href="/admin/reports"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200"
-            >
-              <FileSpreadsheet className="h-4 w-4 text-brand-navy dark:text-brand-gold" />
-              Reports Board
-            </a>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight">
+            Official Inspection Scorecard
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Submit environmental audit scores evaluated by the Inspection Committee.
+          </p>
         </div>
 
         {/* Form Body */}
