@@ -4,7 +4,7 @@ import { hashPassword } from "../lib/auth-crypto";
 import crypto from "crypto";
 
 async function main() {
-    const email = "superadmin@oau.edu.ng";
+    const email = "envirorank-admin@oauife.edu.ng";
     const password = "password123";
 
     console.log("Seeding superadmin into PostgreSQL...");

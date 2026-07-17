@@ -8,8 +8,8 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("envirorank-admin@oauife.edu.ng");
+  const [password, setPassword] = useState("password123");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -89,7 +89,7 @@ function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
             className="w-full h-12 bg-slate-900/60 border border-slate-800 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold text-slate-100 placeholder-slate-650 transition-all disabled:opacity-50"
-            placeholder="superadmin@oau.edu.ng"
+            placeholder="envirorank-admin@oauife.edu.ng"
           />
         </div>
       </div>

@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
-export async function updateProfileRolePrisma(profileId: string, newRole: 'superadmin' | 'user') {
+export async function updateProfileRolePrisma(profileId: string, newRole: 'superadmin' | 'admin') {
   try {
     const supabase = await createClient()
     const { data: { session } } = await supabase.auth.getSession()
@@ -23,7 +23,7 @@ export async function updateProfileRolePrisma(profileId: string, newRole: 'super
       const updated = await tx.profile.update({
         where: { id: profileId },
         data: {
-          role: newRole === 'superadmin' ? 'superadmin' : 'user',
+          role: newRole === 'superadmin' ? 'superadmin' : 'admin',
         },
       })
 

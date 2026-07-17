@@ -1,4 +1,6 @@
+import crypto from "crypto";
 import { prisma } from "../src/lib/db";
+import { hashPassword } from "../src/lib/auth-crypto";
 
 const facultiesData = [
   {
@@ -85,6 +87,37 @@ const facultiesData = [
 
 async function main() {
   console.log("Seeding started...");
+
+  // ── Seed Superadmin ──────────────────────────────────────────────────────
+  const superadminEmail = "envirorank-admin@oauife.edu.ng";
+  const superadminPassword = "password123";
+
+  const existingSuperadmin = await prisma.profile.findFirst({
+    where: { role: "superadmin" },
+  });
+
+  if (existingSuperadmin) {
+    await prisma.profile.update({
+      where: { id: existingSuperadmin.id },
+      data: {
+        email: superadminEmail,
+        passwordHash: hashPassword(superadminPassword),
+        isActive: true,
+      },
+    });
+    console.log(`Updated superadmin: ${superadminEmail}`);
+  } else {
+    await prisma.profile.create({
+      data: {
+        id: crypto.randomUUID(),
+        email: superadminEmail,
+        passwordHash: hashPassword(superadminPassword),
+        role: "superadmin",
+        isActive: true,
+      },
+    });
+    console.log(`Created superadmin: ${superadminEmail}`);
+  }
 
   // Seed Assessment Period
   const activePeriod = await prisma.assessmentPeriod.upsert({
