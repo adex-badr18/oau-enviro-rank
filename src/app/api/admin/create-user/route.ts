@@ -6,8 +6,8 @@ import { hashPassword } from "@/lib/auth-crypto";
 
 const createUserSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(["superadmin", "user"]).default("user"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  role: z.literal("admin").default("admin"),
 });
 
 export async function POST(request: NextRequest) {
@@ -36,28 +36,31 @@ export async function POST(request: NextRequest) {
     });
     if (existing) {
       return NextResponse.json(
-        { error: "Conflict", message: "User with this email already exists" },
+        { error: "Conflict", message: "An account with this email already exists." },
         { status: 409 }
       );
     }
 
-    // 3. Create the user directly in profiles using Prisma with hashed password
+    // 3. Create the admin user with hashed password
     const hashedPassword = hashPassword(password);
     const newProfile = await prisma.profile.create({
       data: {
         email,
         passwordHash: hashedPassword,
         role,
+        isActive: true,
       },
     });
 
     return NextResponse.json(
       {
-        message: "User and profile created successfully",
+        message: "Admin user created successfully",
         user: {
           id: newProfile.id,
           email: newProfile.email,
           role: newProfile.role,
+          isActive: newProfile.isActive,
+          createdAt: newProfile.createdAt,
         },
       },
       { status: 201 }

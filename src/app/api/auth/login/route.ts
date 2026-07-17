@@ -26,10 +26,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify user is superadmin
-    if (profile.role !== "superadmin") {
+    // Verify user role is allowed
+    if (!["superadmin", "admin"].includes(profile.role)) {
       return NextResponse.json(
-        { error: "Forbidden", message: "Superadmin access required." },
+        { error: "Forbidden", message: "Access not permitted for this account type." },
+        { status: 403 }
+      );
+    }
+
+    // Reject deactivated accounts
+    if (!profile.isActive) {
+      return NextResponse.json(
+        { error: "Forbidden", message: "Your account has been deactivated. Contact the system administrator." },
         { status: 403 }
       );
     }
