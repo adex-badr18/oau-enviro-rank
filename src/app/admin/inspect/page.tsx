@@ -349,7 +349,7 @@ export default function AdminInspectPage() {
             >
               Log New Scorecard
             </button>
-             <a
+            <a
               href="/admin/faculties"
               className="flex-1 max-w-xs h-12 inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold transition-all duration-200"
             >
@@ -383,12 +383,12 @@ export default function AdminInspectPage() {
               <h1 className="text-3xl font-extrabold text-brand-navy dark:text-white tracking-tight mt-0.5">
                 Official Inspection Scorecard
               </h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Submit environmental audit scores evaluated by the Inspection Committee.
-            </p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Submit environmental audit scores evaluated by the Inspection Committee.
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="mt-4 sm:mt-0 flex gap-3">
+          <div className="mt-4 sm:mt-0 flex gap-3">
             <a
               href="/admin/faculties"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200"
@@ -476,11 +476,10 @@ export default function AdminInspectPage() {
                               setDropdownOpen(false);
                               trigger("facultyId");
                             }}
-                            className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${
-                              selectedFacultyId === f.id
+                            className={`w-full text-left px-4 py-2.5 text-xs transition-colors ${selectedFacultyId === f.id
                                 ? "bg-brand-navy text-white"
                                 : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                            }`}
+                              }`}
                           >
                             <p className="font-bold">{f.name}</p>
                           </button>
