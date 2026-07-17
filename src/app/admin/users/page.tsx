@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Users, Plus, Shield, Loader2, AlertCircle, CheckCircle2,
   Eye, EyeOff, RefreshCw, Mail, Key, UserCheck, UserX,
-  ClipboardList, Building2, FileSpreadsheet,
+  Lock, ArrowLeft, ShieldAlert
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -46,13 +46,9 @@ function formatDate(iso: string) {
 export default function AdminUsersPage() {
   const router = useRouter();
 
-  // Session guard
-  useEffect(() => {
-    fetch("/api/auth/role")
-      .then((r) => r.json())
-      .then((d) => { if (d.role !== "superadmin") router.push("/admin/reports"); })
-      .catch(() => router.push("/login"));
-  }, [router]);
+  // Session role state
+  const [role, setRole] = useState<string | null>(null);
+  const [checkingRole, setCheckingRole] = useState(true);
 
   // Users list state
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -72,7 +68,22 @@ export default function AdminUsersPage() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
+  // Session guard
+  useEffect(() => {
+    fetch("/api/auth/role")
+      .then((r) => r.json())
+      .then((d) => {
+        setRole(d.role);
+        if (!d.role) {
+          router.push("/login");
+        }
+      })
+      .catch(() => router.push("/login"))
+      .finally(() => setCheckingRole(false));
+  }, [router]);
+
   const loadUsers = useCallback(async () => {
+    if (role !== "superadmin") return;
     setLoadingUsers(true);
     setUsersError(null);
     try {
@@ -85,9 +96,13 @@ export default function AdminUsersPage() {
     } finally {
       setLoadingUsers(false);
     }
-  }, []);
+  }, [role]);
 
-  useEffect(() => { loadUsers(); }, [loadUsers]);
+  useEffect(() => {
+    if (role === "superadmin") {
+      loadUsers();
+    }
+  }, [role, loadUsers]);
 
   function openDialog() {
     setFormEmail("");
@@ -145,6 +160,44 @@ export default function AdminUsersPage() {
     }
   }
 
+  // Loader state when verifying authorization
+  if (checkingRole) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center text-slate-400">
+        <Loader2 className="h-10 w-10 animate-spin text-[#fcb900] mb-3" />
+        <span className="text-sm font-semibold">Authenticating user access...</span>
+      </div>
+    );
+  }
+
+  // Access Denied View
+  if (role !== "superadmin") {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-sans">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 text-center animate-in fade-in zoom-in-95 duration-300">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-950/20 text-rose-500 mb-6 border border-rose-100 dark:border-rose-900">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Access Denied
+          </h2>
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+            Only the system superadministrator has permissions to access user management features.
+          </p>
+          <div className="mt-8">
+            <button
+              onClick={() => router.push("/admin/dashboard")}
+              className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-[#10386b] hover:bg-[#0c2a52] text-white font-bold text-sm transition-all duration-200 shadow-md shadow-slate-200 dark:shadow-none focus:outline-none focus:ring-2 focus:ring-brand-gold"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const superadmin = users.find((u) => u.role === "superadmin");
   const adminUsers = users.filter((u) => u.role !== "superadmin");
 
@@ -152,37 +205,14 @@ export default function AdminUsersPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-5xl mx-auto">
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
-          <div className="flex items-center gap-4">
-            <img src="/oau-logo.png" alt="OAU Logo" className="h-14 w-14 object-contain shrink-0" />
-            <div>
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">
-                Obafemi Awolowo University, Ile-Ife
-              </span>
-              <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight mt-0.5 flex items-center gap-2">
-                <Users className="h-7 w-7 text-[#fcb900]" /> User Management
-              </h1>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Create admin accounts, and manage access to the system.
-              </p>
-            </div>
-          </div>
-
-          {/* Nav links */}
-          <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
-            {[
-              { href: "/admin/reports", icon: <FileSpreadsheet className="h-4 w-4" />, label: "Reports" },
-              { href: "/admin/faculties", icon: <Building2 className="h-4 w-4" />, label: "Faculties" },
-              { href: "/admin/inspect", icon: <ClipboardList className="h-4 w-4" />, label: "Inspect" },
-            ].map((link) => (
-              <a key={link.href} href={link.href}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-300 transition-all">
-                <span className="text-[#10386b] dark:text-[#fcb900]">{link.icon}</span>
-                {link.label}
-              </a>
-            ))}
-          </div>
+        {/* Title Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight flex items-center gap-2">
+            <Users className="h-7 w-7 text-[#fcb900]" /> User Management
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Create admin accounts, and manage access to the system.
+          </p>
         </div>
 
         {/* Notification */}

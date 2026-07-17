@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 interface Profile {
   id: string
   email: string
-  role: 'superadmin' | 'user'
+  role: 'superadmin' | 'admin'
   created_at: string
 }
 
@@ -57,7 +57,7 @@ export default async function PrismaWayPage() {
       ? {
           id: profile.id,
           email: profile.email,
-          role: profile.role === 'superadmin' ? ('superadmin' as const) : ('user' as const),
+          role: profile.role === 'superadmin' ? ('superadmin' as const) : ('admin' as const),
           created_at: profile.createdAt.toISOString()
         }
       : null
@@ -65,7 +65,7 @@ export default async function PrismaWayPage() {
     formattedProfiles = profiles.map((p) => ({
       id: p.id,
       email: p.email,
-      role: p.role === 'superadmin' ? ('superadmin' as const) : ('user' as const),
+      role: p.role === 'superadmin' ? ('superadmin' as const) : ('admin' as const),
       created_at: p.createdAt.toISOString()
     }))
   } catch (err) {
