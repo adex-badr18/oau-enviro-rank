@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Users, Plus, Shield, Loader2, AlertCircle, CheckCircle2,
   Eye, EyeOff, RefreshCw, Mail, Key, UserCheck, UserX,
-  Lock, ArrowLeft, ShieldAlert
+  Lock, ArrowLeft, ShieldAlert, User, Edit2
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -16,9 +16,82 @@ interface UserProfile {
   id: string;
   email: string;
   role: "superadmin" | "admin";
+  firstName?: string | null;
+  lastName?: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+interface PasswordRules {
+  length: boolean;
+  upper: boolean;
+  number: boolean;
+  special: boolean;
+}
+
+function checkPasswordRules(pass: string): PasswordRules {
+  return {
+    length: pass.length >= 8,
+    upper: /[A-Z]/.test(pass),
+    number: /[0-9]/.test(pass),
+    special: /[!@#$%^&*()\-_\=\+\[\]\{\}]/.test(pass),
+  };
+}
+
+function calculateStrength(rules: PasswordRules): { score: number; label: string; color: string } {
+  const metCount = Object.values(rules).filter(Boolean).length;
+  if (metCount === 0) return { score: 0, label: "None", color: "bg-slate-200 dark:bg-slate-800" };
+  if (metCount === 1) return { score: 25, label: "Weak", color: "bg-rose-500" };
+  if (metCount === 2) return { score: 50, label: "Fair", color: "bg-amber-500" };
+  if (metCount === 3) return { score: 75, label: "Good", color: "bg-blue-500" };
+  return { score: 100, label: "Strong", color: "bg-emerald-500" };
+}
+
+function PasswordFeedback({ value }: { value: string }) {
+  if (!value) return null;
+  const rules = checkPasswordRules(value);
+  const { score, label, color } = calculateStrength(rules);
+
+  const checklist = [
+    { label: "Minimum 8 characters", met: rules.length },
+    { label: "At least one uppercase letter", met: rules.upper },
+    { label: "At least one number", met: rules.number },
+    { label: "At least one special character", met: rules.special },
+  ];
+
+  return (
+    <div className="space-y-3 mt-2 p-3.5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in duration-200">
+      {/* Strength Indicator */}
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+          <span>Password Strength</span>
+          <span className="font-extrabold uppercase tracking-wider" style={{ color: score === 100 ? '#10b981' : undefined }}>{label}</span>
+        </div>
+        <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className={`h-full ${color} transition-all duration-300`} style={{ width: `${score}%` }} />
+        </div>
+      </div>
+
+      {/* Rules Checklist */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
+        {checklist.map((rule, idx) => (
+          <div key={idx} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+            <span className={`shrink-0 flex items-center justify-center h-4 w-4 rounded-full text-[9px] font-black ${
+              rule.met 
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400" 
+                : "bg-slate-200 text-slate-400 dark:bg-slate-850 dark:text-slate-500"
+            }`}>
+              {rule.met ? "✓" : "✗"}
+            </span>
+            <span className={rule.met ? "text-emerald-700 dark:text-emerald-400 font-semibold" : ""}>
+              {rule.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function generateStrongPassword(): string {
@@ -49,6 +122,7 @@ export default function AdminUsersPage() {
 
   // Session role state
   const [role, setRole] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [checkingRole, setCheckingRole] = useState(true);
 
   // Users list state
@@ -56,16 +130,30 @@ export default function AdminUsersPage() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [usersError, setUsersError] = useState<string | null>(null);
 
-  // Dialog state
+  // Creation Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formEmail, setFormEmail] = useState("");
   const [formPassword, setFormPassword] = useState("");
+  const [formFirstName, setFormFirstName] = useState("");
+  const [formLastName, setFormLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
 
-  // Toggle state
+  // Edit Dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [editEmail, setEditEmail] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editShowPassword, setEditShowPassword] = useState(false);
+  const [editFormLoading, setEditFormLoading] = useState(false);
+  const [editFormError, setEditFormError] = useState("");
+  const [editFormSuccess, setEditFormSuccess] = useState("");
+
+  // Toggle/Activation state
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -75,6 +163,7 @@ export default function AdminUsersPage() {
       .then((r) => r.json())
       .then((d) => {
         setRole(d.role);
+        setCurrentUserId(d.userId);
         if (!d.role) {
           router.push("/login");
         }
@@ -108,16 +197,37 @@ export default function AdminUsersPage() {
   function openDialog() {
     setFormEmail("");
     setFormPassword("");
+    setFormFirstName("");
+    setFormLastName("");
     setShowPassword(false);
     setFormError("");
     setFormSuccess("");
     setDialogOpen(true);
   }
 
+  function handleEditClick(user: UserProfile) {
+    setEditingUser(user);
+    setEditEmail(user.email);
+    setEditFirstName(user.firstName || "");
+    setEditLastName(user.lastName || "");
+    setEditPassword("");
+    setEditShowPassword(false);
+    setEditFormError("");
+    setEditFormSuccess("");
+    setEditDialogOpen(true);
+  }
+
   async function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
-    if (!formEmail || !formPassword) { setFormError("All fields are required."); return; }
-    if (formPassword.length < 8) { setFormError("Password must be at least 8 characters."); return; }
+    if (!formEmail || !formPassword) { setFormError("Email and Password are required."); return; }
+    
+    // Validate password rules client side
+    const rules = checkPasswordRules(formPassword);
+    if (!rules.length || !rules.upper || !rules.number || !rules.special) {
+      setFormError("Password must meet all complexity requirements.");
+      return;
+    }
+
     setFormLoading(true);
     setFormError("");
     setFormSuccess("");
@@ -125,19 +235,88 @@ export default function AdminUsersPage() {
       const res = await fetch("/api/admin/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formEmail, password: formPassword, role: "admin" }),
+        body: JSON.stringify({ 
+          email: formEmail, 
+          password: formPassword, 
+          role: "admin",
+          firstName: formFirstName || null,
+          lastName: formLastName || null
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to create user.");
-      setFormSuccess(`Account created for ${data.user.email}`);
+      setFormSuccess(`Account created successfully for ${data.user.email}`);
       setFormEmail("");
       setFormPassword("");
+      setFormFirstName("");
+      setFormLastName("");
       loadUsers();
       setTimeout(() => setDialogOpen(false), 1600);
     } catch (e: any) {
       setFormError(e.message);
     } finally {
       setFormLoading(false);
+    }
+  }
+
+  async function handleEditUser(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingUser) return;
+    if (!editEmail) { setEditFormError("Email address is required."); return; }
+
+    // Validate password rules if provided
+    if (editPassword) {
+      const rules = checkPasswordRules(editPassword);
+      if (!rules.length || !rules.upper || !rules.number || !rules.special) {
+        setEditFormError("Password must meet all complexity requirements.");
+        return;
+      }
+    }
+
+    setEditFormLoading(true);
+    setEditFormError("");
+    setEditFormSuccess("");
+    try {
+      const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: editEmail,
+          password: editPassword || undefined,
+          firstName: editFirstName || null,
+          lastName: editLastName || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update profile.");
+      
+      if (data.requiresReLogin) {
+        setEditFormSuccess("Password updated successfully! Redirecting to login...");
+        setTimeout(() => {
+          setEditDialogOpen(false);
+          router.push("/login");
+        }, 1600);
+        return;
+      }
+
+      setEditFormSuccess("Profile updated successfully!");
+
+      // If updating current logged-in superadmin, sync context
+      if (editingUser.id === currentUserId) {
+        fetch("/api/auth/role")
+          .then((r) => r.json())
+          .then((d) => {
+            setRole(d.role);
+            setCurrentUserId(d.userId);
+          });
+      }
+
+      loadUsers();
+      setTimeout(() => setEditDialogOpen(false), 1600);
+    } catch (e: any) {
+      setEditFormError(e.message);
+    } finally {
+      setEditFormLoading(false);
     }
   }
 
@@ -213,7 +392,7 @@ export default function AdminUsersPage() {
             <Users className="h-7 w-7 text-[#fcb900]" /> User Management
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Create admin accounts, and manage access to the system.
+            Create admin accounts, edit details, and manage access to the system.
           </p>
         </div>
 
@@ -233,7 +412,7 @@ export default function AdminUsersPage() {
         )}
 
         {/* Users table card */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in duration-300">
           {/* Table header */}
           <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -278,7 +457,7 @@ export default function AdminUsersPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50">
-                    {["Email Address", "Role", "Status", "Created", "Actions"].map((h) => (
+                    {["User details", "Role", "Status", "Created", "Actions"].map((h) => (
                       <th key={h} className={`py-3.5 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider ${h === "Actions" ? "text-right" : ""}`}>
                         {h}
                       </th>
@@ -290,9 +469,20 @@ export default function AdminUsersPage() {
                   {superadmin && (
                     <tr className="bg-amber-50/30 dark:bg-amber-950/10 hover:bg-amber-50/60 dark:hover:bg-amber-950/20 transition-colors">
                       <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-[#fcb900] shrink-0" />
-                          <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{superadmin.email}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-xl bg-amber-500/10 dark:bg-[#fcb900]/10 flex items-center justify-center shrink-0 border border-amber-500/20 dark:border-[#fcb900]/20">
+                            <Shield className="h-4.5 w-4.5 text-[#fcb900]" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                              {superadmin.firstName || superadmin.lastName ? (
+                                <span>{[superadmin.firstName, superadmin.lastName].filter(Boolean).join(" ")}</span>
+                              ) : (
+                                <span className="text-amber-600/70 dark:text-[#fcb900]/70 italic font-normal">Superadmin (No Name)</span>
+                              )}
+                            </div>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">{superadmin.email}</span>
+                          </div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
@@ -307,7 +497,12 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="py-4 px-6 text-xs text-slate-500 dark:text-slate-400">{formatDate(superadmin.createdAt)}</td>
                       <td className="py-4 px-6 text-right">
-                        <span className="text-xs text-slate-400 italic">—</span>
+                        <button
+                          onClick={() => handleEditClick(superadmin)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-350 dark:border-slate-700"
+                        >
+                          <Edit2 className="h-3 w-3 mr-1" /> Edit Profile
+                        </button>
                       </td>
                     </tr>
                   )}
@@ -316,9 +511,20 @@ export default function AdminUsersPage() {
                   {adminUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-slate-50/40 dark:hover:bg-slate-850/20 transition-colors">
                       <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-slate-400 shrink-0" />
-                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{user.email}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                            <User className="h-4.5 w-4.5 text-slate-500 dark:text-slate-400" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                              {user.firstName || user.lastName ? (
+                                <span>{[user.firstName, user.lastName].filter(Boolean).join(" ")}</span>
+                              ) : (
+                                <span className="text-slate-400 italic font-normal">No Name Provided</span>
+                              )}
+                            </div>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">{user.email}</span>
+                          </div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
@@ -339,23 +545,31 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="py-4 px-6 text-xs text-slate-500 dark:text-slate-400">{formatDate(user.createdAt)}</td>
                       <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => handleToggle(user)}
-                          disabled={togglingId === user.id}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
-                            user.isActive
-                              ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900"
-                              : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900"
-                          }`}
-                        >
-                          {togglingId === user.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : user.isActive ? (
-                            <><UserX className="h-3 w-3" /> Deactivate</>
-                          ) : (
-                            <><UserCheck className="h-3 w-3" /> Activate</>
-                          )}
-                        </button>
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditClick(user)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-350 dark:border-slate-700"
+                          >
+                            <Edit2 className="h-3 w-3 mr-1" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleToggle(user)}
+                            disabled={togglingId === user.id}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
+                              user.isActive
+                                ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900"
+                                : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900"
+                            }`}
+                          >
+                            {togglingId === user.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : user.isActive ? (
+                              <><UserX className="h-3 w-3" /> Deactivate</>
+                            ) : (
+                              <><UserCheck className="h-3 w-3" /> Activate</>
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -371,7 +585,7 @@ export default function AdminUsersPage() {
         <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-0 overflow-hidden">
           <div className="h-1.5 bg-gradient-to-r from-[#10386b] via-[#fcb900] to-[#10386b]" />
           <div className="p-6">
-            <DialogHeader className="mb-6">
+            <DialogHeader className="mb-5">
               <div className="mx-auto h-12 w-12 rounded-2xl bg-[#10386b]/10 dark:bg-[#fcb900]/10 flex items-center justify-center mb-3">
                 <Users className="h-6 w-6 text-[#10386b] dark:text-[#fcb900]" />
               </div>
@@ -383,7 +597,7 @@ export default function AdminUsersPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCreateUser} className="space-y-5">
+            <form onSubmit={handleCreateUser} className="space-y-4 max-h-[70vh] overflow-y-auto px-1 py-1">
               {formError && (
                 <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 text-xs font-semibold text-rose-700 dark:text-rose-400 flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -396,6 +610,38 @@ export default function AdminUsersPage() {
                   {formSuccess}
                 </div>
               )}
+
+              {/* Names row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-[#fcb900]" /> First Name
+                  </label>
+                  <input
+                    id="create-first-name"
+                    type="text"
+                    value={formFirstName}
+                    onChange={(e) => setFormFirstName(e.target.value)}
+                    disabled={formLoading}
+                    placeholder="Optional"
+                    className="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] transition-all disabled:opacity-50"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-[#fcb900]" /> Last Name
+                  </label>
+                  <input
+                    id="create-last-name"
+                    type="text"
+                    value={formLastName}
+                    onChange={(e) => setFormLastName(e.target.value)}
+                    disabled={formLoading}
+                    placeholder="Optional"
+                    className="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] transition-all disabled:opacity-50"
+                  />
+                </div>
+              </div>
 
               {/* Email */}
               <div className="space-y-1.5">
@@ -427,7 +673,7 @@ export default function AdminUsersPage() {
                     value={formPassword}
                     onChange={(e) => setFormPassword(e.target.value)}
                     disabled={formLoading}
-                    placeholder="Minimum 8 characters"
+                    placeholder="Enter secure password"
                     className="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 pr-11 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] transition-all disabled:opacity-50"
                   />
                   <button
@@ -440,12 +686,13 @@ export default function AdminUsersPage() {
                     {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                   </button>
                 </div>
+                <PasswordFeedback value={formPassword} />
                 <button
                   type="button"
                   onClick={() => { const p = generateStrongPassword(); setFormPassword(p); setShowPassword(true); }}
-                  className="flex items-center gap-1.5 text-xs font-bold text-[#10386b] dark:text-[#fcb900] hover:underline mt-1"
+                  className="flex items-center gap-1.5 text-xs font-bold text-[#10386b] dark:text-[#fcb900] hover:underline mt-1.5"
                 >
-                  <RefreshCw className="h-3 w-3" /> Generate Strong Password
+                  <RefreshCw className="h-3 w-3 animate-pulse" /> Generate Strong Password
                 </button>
               </div>
 
@@ -457,7 +704,7 @@ export default function AdminUsersPage() {
                 </span>
               </div>
 
-              <div className="flex gap-3 pt-1">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setDialogOpen(false)}
@@ -472,6 +719,155 @@ export default function AdminUsersPage() {
                   className="flex-1 h-11 rounded-xl bg-[#10386b] hover:bg-[#0c2a52] dark:bg-[#fcb900] dark:hover:bg-[#e2a600] text-white dark:text-slate-900 font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-md"
                 >
                   {formLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Create Account</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-0 overflow-hidden">
+          <div className="h-1.5 bg-gradient-to-r from-[#10386b] via-[#fcb900] to-[#10386b]" />
+          <div className="p-6">
+            <DialogHeader className="mb-5">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-[#10386b]/10 dark:bg-[#fcb900]/10 flex items-center justify-center mb-3">
+                <Edit2 className="h-6 w-6 text-[#10386b] dark:text-[#fcb900]" />
+              </div>
+              <DialogTitle className="text-xl font-extrabold text-center text-slate-900 dark:text-white">
+                {editingUser?.id === currentUserId ? "Edit Your Profile" : "Edit Admin Account"}
+              </DialogTitle>
+              <DialogDescription className="text-center text-xs text-slate-500 dark:text-slate-400">
+                {editingUser?.id === currentUserId 
+                  ? "Update your personal profile details and security credentials." 
+                  : "Modify email address, names, and credentials for this administrator."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleEditUser} className="space-y-4 max-h-[70vh] overflow-y-auto px-1 py-1">
+              {editFormError && (
+                <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 text-xs font-semibold text-rose-700 dark:text-rose-400 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {editFormError}
+                </div>
+              )}
+              {editFormSuccess && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/30 text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  {editFormSuccess}
+                </div>
+              )}
+
+              {/* Names row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-[#fcb900]" /> First Name
+                  </label>
+                  <input
+                    id="edit-first-name"
+                    type="text"
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    disabled={editFormLoading}
+                    placeholder="Optional"
+                    className="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] transition-all disabled:opacity-50"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-[#fcb900]" /> Last Name
+                  </label>
+                  <input
+                    id="edit-last-name"
+                    type="text"
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    disabled={editFormLoading}
+                    placeholder="Optional"
+                    className="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] transition-all disabled:opacity-50"
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5 text-[#fcb900]" /> Email Address
+                </label>
+                <input
+                  id="edit-user-email"
+                  type="email"
+                  required
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  disabled={editFormLoading}
+                  placeholder="admin@oauife.edu.ng"
+                  className="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] transition-all disabled:opacity-50"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Key className="h-3.5 w-3.5 text-[#fcb900]" /> New Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="edit-user-password"
+                    type={editShowPassword ? "text" : "password"}
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    disabled={editFormLoading}
+                    placeholder="Leave blank to keep current password"
+                    className="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 pr-11 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#10386b] dark:focus:ring-[#fcb900] transition-all disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    tabIndex={-1}
+                    aria-label={editShowPassword ? "Hide password" : "Show password"}
+                  >
+                    {editShowPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                  </button>
+                </div>
+                <PasswordFeedback value={editPassword} />
+                {editPassword && (
+                  <button
+                    type="button"
+                    onClick={() => { const p = generateStrongPassword(); setEditPassword(p); setEditShowPassword(true); }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#10386b] dark:text-[#fcb900] hover:underline mt-1.5"
+                  >
+                    <RefreshCw className="h-3 w-3 animate-pulse" /> Generate Strong Password
+                  </button>
+                )}
+              </div>
+
+              {/* Role Info Box */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Role</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                  {editingUser?.role}
+                </span>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditDialogOpen(false)}
+                  disabled={editFormLoading}
+                  className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editFormLoading}
+                  className="flex-1 h-11 rounded-xl bg-[#10386b] hover:bg-[#0c2a52] dark:bg-[#fcb900] dark:hover:bg-[#e2a600] text-white dark:text-slate-900 font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-md"
+                >
+                  {editFormLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><CheckCircle2 className="h-4 w-4" /> Save Changes</>}
                 </button>
               </div>
             </form>

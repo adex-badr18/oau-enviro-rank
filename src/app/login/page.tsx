@@ -10,7 +10,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("envirorank-admin@oauife.edu.ng");
-  const [password, setPassword] = useState("password123");
+  const [password, setPassword] = useState("Pa$$word123");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");

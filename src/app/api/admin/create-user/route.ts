@@ -6,8 +6,14 @@ import { hashPassword } from "@/lib/auth-crypto";
 
 const createUserSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .refine((val) => /[A-Z]/.test(val), "Password must contain at least one uppercase letter")
+    .refine((val) => /[0-9]/.test(val), "Password must contain at least one numeric character")
+    .refine((val) => /[!@#$%^&*()\-_\=\+\[\]\{\}]/.test(val), "Password must contain at least one special character"),
   role: z.literal("admin").default("admin"),
+  firstName: z.string().optional().nullable(),
+  lastName: z.string().optional().nullable(),
 });
 
 export async function POST(request: NextRequest) {
@@ -22,13 +28,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = createUserSchema.safeParse(body);
     if (!parsed.success) {
+      // Return custom Zod validation errors cleanly
+      const issue = parsed.error.issues[0];
       return NextResponse.json(
-        { error: "Validation Error", details: parsed.error.format() },
+        { error: "Validation Error", message: issue.message },
         { status: 400 }
       );
     }
 
-    const { email, password, role } = parsed.data;
+    const { email, password, role, firstName, lastName } = parsed.data;
     const normalizedEmail = email.trim().toLowerCase();
     console.log(`[Create User API] Creating new user: "${email}" (normalized: "${normalizedEmail}"), role: "${role}"`);
 
@@ -51,6 +59,8 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail,
         passwordHash: hashedPassword,
         role,
+        firstName: firstName || null,
+        lastName: lastName || null,
         isActive: true,
       },
     });
