@@ -316,7 +316,7 @@ export default function AdminFacultiesPage() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         <BackButton />
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
