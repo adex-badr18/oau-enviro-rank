@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { checkSuperadmin } from "@/utils/supabase/check-admin";
+import { checkAuth } from "@/utils/supabase/check-auth";
 
 // Zod schema for validation
 const CreateFacultySchema = z.object({
@@ -28,7 +28,7 @@ export async function GET() {
 
 // POST: Create a new faculty
 export async function POST(request: NextRequest) {
-  const auth = await checkSuperadmin();
+  const auth = await checkAuth();
   if (!auth.authorized) {
     return auth.response;
   }

@@ -14,14 +14,14 @@ function LoginForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  const redirectTo = searchParams.get("redirectTo") || "/admin/reports";
+  const redirectTo = searchParams.get("redirectTo") || "/admin/dashboard";
 
   useEffect(() => {
     const checkSession = async () => {
       try {
         const res = await fetch("/api/auth/role");
         const data = await res.json();
-        if (data.role === "superadmin") {
+        if (data.role === "superadmin" || data.role === "admin") {
           router.push(redirectTo);
         }
       } catch (err) {
@@ -143,7 +143,7 @@ export default function LoginPage() {
           <div className="mx-auto h-14 w-14 rounded-2xl bg-brand-navy/20 flex items-center justify-center text-brand-gold mb-4 border border-brand-navy/40">
             <Shield className="h-7 w-7" />
           </div>
-          <h2 className="text-2xl font-black text-white tracking-tight">Superadmin Sign In</h2>
+          <h2 className="text-2xl font-black text-white tracking-tight">Administration Sign In</h2>
           <p className="text-xs text-slate-400 mt-2 max-w-xs mx-auto">
             Authorized OAU Environmental Compliance credentials required to access administration dashboard.
           </p>

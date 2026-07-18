@@ -24,17 +24,37 @@ export async function proxy(request: NextRequest) {
 
   if (isProtectedPath) {
     const token = request.cookies.get('oau_session')?.value;
-    let isSuperadmin = false;
+    let userRole: string | null = null;
 
     if (token) {
       const payload = verifyToken(token);
-      if (payload && payload.role === 'superadmin') {
-        isSuperadmin = true;
+      if (payload) {
+        userRole = payload.role;
       }
     }
 
-    if (!isSuperadmin) {
+    // Determine if the user is authorized based on role and path
+    let isAuthorized = false;
+    if (userRole === 'superadmin') {
+      isAuthorized = true;
+    } else if (userRole === 'admin') {
+      const isUserManagementPath = 
+        pathname.startsWith('/admin/users') || 
+        pathname.startsWith('/api/admin/users') || 
+        pathname.startsWith('/api/admin/create-user');
+      
+      if (!isUserManagementPath) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
       if (isAdminPath) {
+        // If logged in as admin trying to access the user management page,
+        // let them pass through so they see the inline "Access Denied" locking panel instead of a redirect loop.
+        if (userRole === 'admin' && pathname.startsWith('/admin/users')) {
+          return response;
+        }
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('redirectTo', pathname);
         return NextResponse.redirect(loginUrl);

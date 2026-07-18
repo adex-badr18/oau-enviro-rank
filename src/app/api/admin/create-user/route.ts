@@ -29,12 +29,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password, role } = parsed.data;
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log(`[Create User API] Creating new user: "${email}" (normalized: "${normalizedEmail}"), role: "${role}"`);
 
     // Check if user already exists
     const existing = await prisma.profile.findFirst({
-      where: { email },
+      where: { email: normalizedEmail },
     });
     if (existing) {
+      console.log(`[Create User API] User already exists: "${normalizedEmail}"`);
       return NextResponse.json(
         { error: "Conflict", message: "An account with this email already exists." },
         { status: 409 }
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = hashPassword(password);
     const newProfile = await prisma.profile.create({
       data: {
-        email,
+        email: normalizedEmail,
         passwordHash: hashedPassword,
         role,
         isActive: true,
