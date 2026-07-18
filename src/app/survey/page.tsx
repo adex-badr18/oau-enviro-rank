@@ -207,6 +207,16 @@ export default function SurveyPage() {
   // Submit and Recalculation Results State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<any | null>(null);
+  const [activePeriodLabel, setActivePeriodLabel] = useState<string>("");
+
+  useEffect(() => {
+    const now = new Date();
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    setActivePeriodLabel(`${months[now.getMonth()]} ${now.getFullYear()}`);
+  }, []);
 
   // Initialize form
   const {
@@ -564,6 +574,15 @@ export default function SurveyPage() {
 
   return (
     <div className="flex-1 bg-zinc-50 dark:bg-[#090b10] py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center font-sans">
+      <div className="w-full max-w-5xl flex flex-col items-start mb-6">
+        <a
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-2 rounded-xl shadow-sm hover:shadow active:scale-[0.98]"
+        >
+          <ChevronLeft className="h-4 w-4 text-[#fcb900]" />
+          Cancel
+        </a>
+      </div>
 
       {/* Brand Heading */}
       <div className="w-full max-w-8/10 text-center mb-8 flex flex-col items-center">
@@ -636,7 +655,7 @@ export default function SurveyPage() {
           </div>
 
           <div className="mt-8 md:mt-0 pt-4 border-t border-white/10 text-xs text-white/50 font-medium">
-            Active Period: June 2026
+            Active Period: {activePeriodLabel || "..."}
           </div>
         </div>
 

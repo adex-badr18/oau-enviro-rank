@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, ArrowLeft, LogOut, Home } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import BackButton from "@/components/BackButton";
 
 export default function ForbiddenPage() {
   const router = useRouter();
@@ -22,6 +23,10 @@ export default function ForbiddenPage() {
 
       <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-3xl p-8 shadow-2xl relative overflow-hidden z-10 text-center animate-in fade-in zoom-in-95 duration-300">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-rose-600 via-[#fcb900] to-rose-600" />
+
+        <div className="flex justify-start">
+          <BackButton />
+        </div>
 
         <div className="mx-auto h-16 w-16 rounded-2xl bg-rose-950/20 flex items-center justify-center text-rose-500 mb-6 border border-rose-900/45">
           <ShieldAlert className="h-8 w-8" />

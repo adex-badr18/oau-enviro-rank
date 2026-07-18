@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Trophy,
 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 interface LeaderboardItem {
   rank: number;
@@ -47,11 +48,15 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<string>((now.getMonth() + 1).toString());
+  const [selectedYear, setSelectedYear] = useState<string>(now.getFullYear().toString());
+
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/leaderboard?type=current");
+      const res = await fetch(`/api/leaderboard?month=${selectedMonth}&year=${selectedYear}`);
       if (!res.ok) {
         throw new Error("Failed to load dashboard data.");
       }
@@ -62,24 +67,41 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  useEffect(() => {
+    // Prevent going back to login by pushing a history state
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      // Re-push state to keep the user on this page
+      window.history.pushState(null, "", window.location.href);
+      // Reload the Admin Dashboard
+      window.location.reload();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
   const getRatingBadgeClass = (rating: string) => {
     switch (rating) {
       case "Excellent":
-        return "bg-emerald-100 text-emerald-850 border-emerald-350 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900";
+        return "bg-emerald-100 text-emerald-855 border-emerald-355 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900";
       case "Very Good":
-        return "bg-teal-100 text-teal-850 border-teal-350 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-900";
+        return "bg-teal-100 text-teal-855 border-teal-355 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-900";
       case "Good":
-        return "bg-blue-100 text-blue-850 border-blue-350 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900";
+        return "bg-blue-105 text-blue-855 border-blue-355 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900";
       case "Fair":
-        return "bg-amber-100 text-amber-850 border-amber-350 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-905";
+        return "bg-amber-105 text-amber-855 border-amber-355 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-905";
       default:
-        return "bg-rose-100 text-rose-850 border-rose-350 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-905";
+        return "bg-rose-105 text-rose-855 border-rose-355 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-905";
     }
   };
 
@@ -99,6 +121,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-5xl mx-auto">
+
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -115,14 +138,56 @@ export default function AdminDashboardPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={fetchDashboardData}
-            disabled={loading}
-            className="self-start sm:self-center inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200 disabled:opacity-50"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh Data
-          </button>
+
+          <div className="flex items-center gap-2.5 self-start sm:self-center">
+            {/* Month Select */}
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="h-10 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold text-slate-700 dark:text-slate-350 font-bold"
+            >
+              {[
+                { val: "1", label: "January" },
+                { val: "2", label: "February" },
+                { val: "3", label: "March" },
+                { val: "4", label: "April" },
+                { val: "5", label: "May" },
+                { val: "6", label: "June" },
+                { val: "7", label: "July" },
+                { val: "8", label: "August" },
+                { val: "9", label: "September" },
+                { val: "10", label: "October" },
+                { val: "11", label: "November" },
+                { val: "12", label: "December" },
+              ].map((m) => (
+                <option key={m.val} value={m.val}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Year Select */}
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="h-10 px-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-navy dark:focus:ring-brand-gold text-slate-700 dark:text-slate-350 font-bold"
+            >
+              {["2025", "2026", "2027", "2028"].map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={fetchDashboardData}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-4 h-10 text-xs font-bold rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-800 dark:text-slate-350 transition-all duration-200 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {loading ? (

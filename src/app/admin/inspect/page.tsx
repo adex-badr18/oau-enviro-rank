@@ -16,6 +16,7 @@ import {
   TrendingUp,
   FileSpreadsheet,
 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 // Criteria details with exact max scores matching the official framework
 const criteriaConfig = [
@@ -370,6 +371,7 @@ export default function AdminInspectPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-6xl mx-auto">
+        <BackButton />
         {/* Navigation / Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold text-[#10386b] dark:text-white tracking-tight">

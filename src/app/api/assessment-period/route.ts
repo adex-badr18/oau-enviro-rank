@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { ensureCurrentPeriodActive } from "@/lib/assessment-period";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const activePeriod = await prisma.assessmentPeriod.findFirst({
-      where: { isActive: true },
-    });
+    const activePeriod = await ensureCurrentPeriodActive();
 
     if (!activePeriod) {
       return NextResponse.json(
