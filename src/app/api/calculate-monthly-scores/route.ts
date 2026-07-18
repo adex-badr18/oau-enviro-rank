@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { calculateWeightedScore } from "@/lib/score-calculator";
-import { checkSuperadmin } from "@/utils/supabase/check-admin";
+import { checkAuth } from "@/utils/supabase/check-auth";
 
 export const dynamic = "force-dynamic";
 
 async function handleRecalculate(request: NextRequest) {
   // 1. RBAC Guard check
-  const auth = await checkSuperadmin();
+  const auth = await checkAuth();
   if (!auth.authorized) {
     return auth.response;
   }

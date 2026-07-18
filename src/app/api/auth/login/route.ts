@@ -14,20 +14,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log(`[Login API] Attempting login for email: "${email}" (normalized: "${normalizedEmail}")`);
+
     // Find the profile in PostgreSQL
     const profile = await prisma.profile.findFirst({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (!profile) {
+      console.log(`[Login API] User profile not found for email: "${normalizedEmail}"`);
       return NextResponse.json(
         { error: "Unauthorized", message: "Invalid credentials or unauthorized access." },
         { status: 401 }
       );
     }
 
+    console.log(`[Login API] Profile found. ID: ${profile.id}, Role: ${profile.role}, Active: ${profile.isActive}`);
+
     // Verify user role is allowed
     if (!["superadmin", "admin"].includes(profile.role)) {
+      console.log(`[Login API] Role "${profile.role}" is not authorized for admin section.`);
       return NextResponse.json(
         { error: "Forbidden", message: "Access not permitted for this account type." },
         { status: 403 }
@@ -36,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     // Reject deactivated accounts
     if (!profile.isActive) {
+      console.log(`[Login API] Account is inactive.`);
       return NextResponse.json(
         { error: "Forbidden", message: "Your account has been deactivated. Contact the system administrator." },
         { status: 403 }
@@ -44,6 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Verify password hash
     const isPasswordCorrect = verifyPassword(password, profile.passwordHash);
+    console.log(`[Login API] Password verification result: ${isPasswordCorrect}`);
     if (!isPasswordCorrect) {
       return NextResponse.json(
         { error: "Unauthorized", message: "Invalid credentials or unauthorized access." },
