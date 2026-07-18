@@ -17,6 +17,8 @@ export async function GET() {
         id: true,
         email: true,
         role: true,
+        firstName: true,
+        lastName: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
