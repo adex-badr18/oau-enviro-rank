@@ -3,6 +3,7 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Shield, Lock, Mail, Key, Loader2, ArrowRight } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 function LoginForm() {
   const router = useRouter();
@@ -14,7 +15,10 @@ function LoginForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  const redirectTo = searchParams.get("redirectTo") || "/admin/dashboard";
+  let redirectTo = searchParams.get("redirectTo") || "/admin/dashboard";
+  if (redirectTo === "/admin/inspect") {
+    redirectTo = "/admin/dashboard";
+  }
 
   useEffect(() => {
     const checkSession = async () => {
@@ -22,7 +26,7 @@ function LoginForm() {
         const res = await fetch("/api/auth/role");
         const data = await res.json();
         if (data.role === "superadmin" || data.role === "admin") {
-          router.push(redirectTo);
+          router.replace(redirectTo);
         }
       } catch (err) {
         console.error("Check session error:", err);
@@ -56,7 +60,7 @@ function LoginForm() {
 
       // Delay slightly for visual feedback, then redirect
       setTimeout(() => {
-        window.location.href = redirectTo;
+        window.location.replace(redirectTo);
       }, 800);
     } catch (err: any) {
       setErrorMsg(err.message || "Invalid credentials or unauthorized access.");
@@ -138,6 +142,10 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-3xl p-8 shadow-2xl relative overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-300">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-brand-navy via-brand-gold to-brand-navy" />
+
+        <div className="flex justify-start">
+          <BackButton />
+        </div>
 
         <div className="text-center mb-8">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-brand-navy/20 flex items-center justify-center text-brand-gold mb-4 border border-brand-navy/40">

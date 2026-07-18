@@ -7,6 +7,7 @@ import {
   normalizeUserResponse,
   getPerformanceRating,
 } from "@/lib/score-calculator";
+import { ensureCurrentPeriodActive } from "@/lib/assessment-period";
 import { z } from "zod";
 
 const VoteRequestSchema = z.object({
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { facultyId, month, year, role, respondentId, responses } = result.data;
+    const { facultyId, role, respondentId, responses } = result.data;
 
     // Check if faculty exists
     const faculty = await prisma.faculty.findUnique({
@@ -44,18 +45,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find or create the assessment period
-    const period = await prisma.assessmentPeriod.upsert({
-      where: {
-        month_year: { month, year },
-      },
-      update: {},
-      create: {
-        month,
-        year,
-        isActive: true,
-      },
-    });
+    // Ensure the current period is active and use it
+    const period = await ensureCurrentPeriodActive();
 
     // Record response and recalculate score inside a transaction
     const transactionResult = await prisma.$transaction(async (tx) => {

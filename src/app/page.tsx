@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getPerformanceRating } from "@/lib/score-calculator";
 import LeaderboardClient from "./LeaderboardClient";
+import { ensureCurrentPeriodActive } from "@/lib/assessment-period";
 import type { Metadata } from "next";
 
 // Force dynamic rendering to prevent build-time database connection errors
@@ -13,9 +14,7 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   // 1. Fetch the active assessment period
-  const activePeriod = await prisma.assessmentPeriod.findFirst({
-    where: { isActive: true },
-  });
+  const activePeriod = await ensureCurrentPeriodActive();
 
   // 2. Fetch all faculties sorted by currentScore descending
   const faculties = await prisma.faculty.findMany({

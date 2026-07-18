@@ -195,11 +195,11 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
                 Submit Survey Poll
               </a>
               <a
-                href="/admin/inspect"
+                href="/admin/dashboard"
                 className="h-12 px-6 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 hover:bg-white/10 text-white font-semibold transition-all duration-200"
               >
                 <UserCheck className="h-4 w-4 text-brand-gold" />
-                Inspector Portal
+                Admin Portal
               </a>
             </div>
           </div>
@@ -258,35 +258,7 @@ export default function LeaderboardClient({ initialData }: LeaderboardClientProp
       </div>
 
       <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 flex-1 flex flex-col gap-10">
-        {/* Toggle between Current Period & Historical Averages */}
-        <div className="flex justify-center">
-          <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm">
-            <button
-              type="button"
-              onClick={() => setLeaderboardType("current")}
-              className={`px-5 py-2.5 text-xs font-black rounded-xl transition-all duration-200 flex items-center gap-2 ${
-                leaderboardType === "current"
-                  ? "bg-white dark:bg-slate-850 text-brand-navy dark:text-brand-gold shadow-md shadow-slate-200/50 dark:shadow-none"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-750 dark:hover:text-slate-300"
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              Current Month
-            </button>
-            <button
-              type="button"
-              onClick={() => setLeaderboardType("historical")}
-              className={`px-5 py-2.5 text-xs font-black rounded-xl transition-all duration-200 flex items-center gap-2 ${
-                leaderboardType === "historical"
-                  ? "bg-white dark:bg-slate-850 text-brand-navy dark:text-brand-gold shadow-md shadow-slate-200/50 dark:shadow-none"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-750 dark:hover:text-slate-300"
-              }`}
-            >
-              <History className="h-3.5 w-3.5" />
-              Historical Averages
-            </button>
-          </div>
-        </div>
+
 
         {fetchError && (
           <div className="p-4 bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900 rounded-2xl flex items-center gap-3 text-rose-800 dark:text-rose-400 font-medium">

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getPerformanceRating } from "@/lib/score-calculator";
+import { ensureCurrentPeriodActive } from "@/lib/assessment-period";
+import { checkAuth } from "@/utils/supabase/check-auth";
 
 // Disable static optimization for this API to ensure real-time data
 export const dynamic = "force-dynamic";
@@ -9,6 +11,138 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const type = url.searchParams.get("type") || "current";
+    const monthStr = url.searchParams.get("month");
+    const yearStr = url.searchParams.get("year");
+
+    const isCustomPeriod = !!(monthStr && yearStr);
+
+    // Restricted views check
+    if (type === "historical" || isCustomPeriod) {
+      const auth = await checkAuth();
+      if (!auth.authorized) {
+        return auth.response;
+      }
+    }
+
+    if (isCustomPeriod) {
+      const month = parseInt(monthStr, 10);
+      const year = parseInt(yearStr, 10);
+      const period = await prisma.assessmentPeriod.findUnique({
+        where: {
+          month_year: { month, year },
+        },
+      });
+
+      let leaderboard: any[] = [];
+      let totalInspections = 0;
+      let totalVotes = 0;
+      let totalStaffVotes = 0;
+      let totalStudentVotes = 0;
+      let campusAverage = 0;
+
+      if (period) {
+        const scores = await prisma.monthlyFacultyScore.findMany({
+          where: { periodId: period.id },
+          include: { faculty: true },
+          orderBy: { finalScore: "desc" },
+        });
+
+        leaderboard = scores.map((s, index) => ({
+          rank: index + 1,
+          id: s.facultyId,
+          name: s.faculty.name,
+          buildingName: s.faculty.buildingName,
+          description: s.faculty.description,
+          currentScore: s.finalScore,
+          rating: getPerformanceRating(s.finalScore),
+        }));
+
+        // Fill in missing faculties if any
+        const scoredFacultyIds = new Set(scores.map((s) => s.facultyId));
+        const allFaculties = await prisma.faculty.findMany();
+        const unscoredFaculties = allFaculties.filter((f) => !scoredFacultyIds.has(f.id));
+
+        if (unscoredFaculties.length > 0) {
+          const unscoredItems = unscoredFaculties.map((f) => ({
+            id: f.id,
+            name: f.name,
+            buildingName: f.buildingName,
+            description: f.description,
+            currentScore: 0,
+            rating: getPerformanceRating(0),
+          }));
+
+          const merged = [
+            ...leaderboard.map((item) => ({ ...item, rank: 0 })),
+            ...unscoredItems.map((item) => ({ ...item, rank: 0 })),
+          ];
+
+          merged.sort((a, b) => b.currentScore - a.currentScore);
+          leaderboard = merged.map((item, index) => ({
+            ...item,
+            rank: index + 1,
+          }));
+        }
+
+        totalInspections = await prisma.officialInspection.count({
+          where: { periodId: period.id },
+        });
+
+        totalVotes = await prisma.userResponse.count({
+          where: { periodId: period.id },
+        });
+
+        totalStaffVotes = await prisma.userResponse.count({
+          where: {
+            periodId: period.id,
+            role: "STAFF",
+          },
+        });
+
+        totalStudentVotes = await prisma.userResponse.count({
+          where: {
+            periodId: period.id,
+            role: "STUDENT",
+          },
+        });
+
+        const avgScoreAgg = await prisma.monthlyFacultyScore.aggregate({
+          where: { periodId: period.id },
+          _avg: { finalScore: true },
+        });
+        campusAverage = avgScoreAgg._avg.finalScore
+          ? Math.round(avgScoreAgg._avg.finalScore * 100) / 100
+          : 0;
+      } else {
+        const allFaculties = await prisma.faculty.findMany();
+        leaderboard = allFaculties.map((f, index) => ({
+          rank: index + 1,
+          id: f.id,
+          name: f.name,
+          buildingName: f.buildingName,
+          description: f.description,
+          currentScore: 0,
+          rating: getPerformanceRating(0),
+        }));
+      }
+
+      return NextResponse.json({
+        activePeriod: {
+          month,
+          year,
+          label: `${getMonthName(month)} ${year}`,
+        },
+        leaderboard,
+        stats: {
+          totalInspections,
+          totalVotes,
+          totalStaffVotes,
+          totalStudentVotes,
+          campusAverage,
+          totalFaculties: leaderboard.length,
+        },
+      });
+    }
 
     if (type === "historical") {
       // 1. Fetch all monthly scores and faculties
@@ -82,10 +216,8 @@ export async function GET(request: Request) {
     }
 
     // Default 'current' view
-    // 1. Fetch active assessment period
-    const activePeriod = await prisma.assessmentPeriod.findFirst({
-      where: { isActive: true },
-    });
+    // 1. Fetch active assessment period using ensureCurrentPeriodActive
+    const activePeriod = await ensureCurrentPeriodActive();
 
     // 2. Fetch all faculties sorted by currentScore descending
     const faculties = await prisma.faculty.findMany({
