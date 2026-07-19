@@ -43,27 +43,18 @@ The following changes must be made to your local codebase before pushing to depl
 
 ---
 
-### 2.1 — `prisma/schema.prisma`: Add `DATABASE_URL` env reference
+### 2.1 — Prisma 7 connection architecture (already correct ✅)
 
-The current `datasource db` block is missing the `url` field pointing to an environment variable. Without it, Prisma cannot connect at runtime on Render.
+> [!IMPORTANT]
+> **Prisma 7 removed `url` and `directUrl` from `schema.prisma`.** Do **not** add those fields to the schema — doing so will cause a `P1012` validation error and break the build.
 
-**Current state (`prisma/schema.prisma`, lines 8–10):**
-```prisma
-datasource db {
-  provider = "postgresql"
-}
-```
+This project already uses the correct Prisma 7 connection pattern — **no changes are needed**:
 
-**Change it to:**
-```prisma
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-```
+- **`prisma/schema.prisma`** — Only declares `provider = "postgresql"`. No `url` or `directUrl` here.
+- **`prisma.config.ts`** — Provides `DATABASE_URL` to the Prisma CLI for `db push`, migrations, and seeding.
+- **`src/lib/db.ts`** — Passes `DATABASE_URL` to the `PrismaPg` adapter for runtime queries at application startup.
 
-> The `directUrl` is used by the Prisma CLI for migrations and seeding. The `url` is used by the application at runtime.
+All three files work together. You only need to set `DATABASE_URL` in the Render Environment tab and the whole chain resolves automatically.
 
 ---
 
@@ -156,8 +147,7 @@ Navigate to your Web Service → **Environment** tab → **Add Environment Varia
 
 | Variable | Value | Notes |
 | :--- | :--- | :--- |
-| `DATABASE_URL` | Internal Database URL from Step 3 | Used by the app at runtime |
-| `DIRECT_URL` | External Database URL from Step 3 | Used by Prisma CLI for migrations |
+| `DATABASE_URL` | Internal Database URL from Step 3 | Used by both the app at runtime and Prisma CLI via `prisma.config.ts` |
 | `SESSION_SECRET` | A long, random string (64 chars) | Signs auth session tokens — **generate with `openssl rand -hex 32`** |
 | `NEXT_PUBLIC_APP_URL` | `https://oau-enviro-rank.onrender.com` | Your Render service URL (set after first deploy) |
 | `NODE_ENV` | `production` | Instructs Next.js and Prisma to use production paths |
@@ -294,7 +284,7 @@ databases:
 | 1 | `.env` is in `.gitignore` | ✅ Already done |
 | 2 | `SESSION_SECRET` is a strong 64-char random string set only in the Render Dashboard | ⬜ Do this |
 | 3 | `DATABASE_URL` is set only in the Render Dashboard (not as a plain value in `render.yaml`) | ⬜ Do this |
-| 4 | `prisma/schema.prisma` `datasource db` block points to `env("DATABASE_URL")` | ⬜ Apply change from §2.1 |
+| 4 | `prisma/schema.prisma` does **not** contain `url` or `directUrl` (Prisma 7 removed these) | ✅ Already correct |
 | 5 | `src/lib/auth-session.ts` throws a fatal error if `SESSION_SECRET` is missing | ⬜ Apply change from §2.2 |
 | 6 | `BYPASS_AUTH_FOR_TEST` is **not** set in the Render Environment tab | ⬜ Verify this |
 | 7 | `NODE_ENV` is set to `production` in the Render Environment tab | ⬜ Do this |
@@ -320,8 +310,7 @@ Once Render completes the deployment and your service URL is live (e.g., `https:
 
 | Variable | Scope | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `DATABASE_URL` | Server-only | ✅ Yes | PostgreSQL connection string used by the app at runtime. |
-| `DIRECT_URL` | Server-only | ✅ Yes | Direct PostgreSQL connection string used by Prisma CLI for migrations. |
+| `DATABASE_URL` | Server-only | ✅ Yes | PostgreSQL connection string. Used by `prisma.config.ts` for CLI operations and by `src/lib/db.ts` for runtime queries. |
 | `SESSION_SECRET` | Server-only | ✅ Yes | HMAC-SHA256 signing key for session tokens. Min 64 chars. **Never** expose client-side. |
 | `NODE_ENV` | Server-only | ✅ Yes | Set to `production` on Render. Controls Next.js build mode. |
 | `NEXT_PUBLIC_APP_URL` | Client + Server | ✅ Yes | The full public URL of the deployed app. Used for absolute URL construction. |
