@@ -146,7 +146,7 @@ Fill in the service configuration form:
 | **Region** | Same region as your database (e.g., Frankfurt) |
 | **Branch** | `main` (or your production branch) |
 | **Runtime** | **Node** |
-| **Build Command** | `npm install && npm run build` |
+| **Build Command** | `npm install && npm run build && npx prisma db push` |
 | **Start Command** | `npm start` |
 | **Plan** | **Free** |
 
@@ -186,10 +186,10 @@ Navigate to your Web Service → **Environment** tab → **Add Environment Varia
 
 Render's Node runtime will automatically run your build script on every push:
 
-- **Build Command:** `npm install && npm run build`
-  - This runs `prisma generate` (from your `package.json` build script) then `next build`.
+- **Build Command:** `npm install && npm run build && npx prisma db push`
+  - Installs packages (`production=false` via `.npmrc` ensures devDependencies are included), runs `prisma generate` + `next build`, then pushes the Prisma schema to the database. Running `db push` here is safe — it is fully idempotent.
 - **Start Command:** `npm start`
-  - This runs `next start` which serves the standalone `.next` output.
+  - Runs `next start` which serves the standalone `.next` output.
 
 > [!NOTE]
 > Render caches `node_modules` between builds to speed up subsequent deploys. If you add new dependencies, it automatically reinstalls them.
@@ -198,39 +198,35 @@ Render's Node runtime will automatically run your build script on every push:
 
 ## 7. Run Database Migrations and Seed
 
-After the first successful deployment, you need to push the Prisma schema and seed the database.
+> [!WARNING]
+> The Render Shell is **not available on the free tier**. The options below are the correct approaches for free-tier deployments.
 
-### 7.1 Using the Render Shell (Recommended)
+---
 
-1. In the Render Dashboard, navigate to your Web Service.
-2. Click the **Shell** tab.
-3. Run the following commands **in order**:
+### Option A: Bake `prisma db push` into the build command (Recommended ✅)
 
-```bash
-# Step 1: Push the Prisma schema to create all tables
-npx prisma db push
+This is already done for you in §6 above. By appending `&& npx prisma db push` to the build command, Render pushes the schema to the database automatically on every deploy — no manual step required.
 
-# Step 2: Seed the database with OAU faculties and the active assessment period
-npx tsx prisma/seed.ts
-```
+- `prisma db push` is **idempotent**: running it on a database that is already in sync with the schema is a no-op, so it is safe to run on every deploy.
+- `DATABASE_URL` is available in Render's build environment because you set it in the Environment tab in Step 5.
 
-### 7.2 Running Migrations Locally Against the Render Database
+---
 
-You can also run migrations from your local machine using the **External Database URL**:
+### Option B: Seed locally using the External Database URL (One-time setup)
+
+Seeding is a **one-time operation** (you don't want to re-insert faculties on every deploy). Run it once from your local machine using the **External Database URL** that Render provides on your PostgreSQL service page:
 
 ```bash
-# Replace with your actual Render External Database URL
-DATABASE_URL="postgresql://oau_admin:YOURPASSWORD@oregon-postgres.render.com:5432/oau_enviro_rank" \
-DIRECT_URL="postgresql://oau_admin:YOURPASSWORD@oregon-postgres.render.com:5432/oau_enviro_rank" \
-npx prisma db push
+# 1. Find your External Database URL in:
+#    Render Dashboard → your PostgreSQL service → "External Database URL"
 
-# Then seed
+# 2. Run the seed script locally, pointing at the Render database
 DATABASE_URL="postgresql://oau_admin:YOURPASSWORD@oregon-postgres.render.com:5432/oau_enviro_rank" \
 npx tsx prisma/seed.ts
 ```
 
 > [!IMPORTANT]
-> Use the **External Database URL** (not the internal one) when connecting from your local machine.
+> Use the **External Database URL** (not the Internal one) when connecting from your local machine. The Internal URL only works within Render's private network.
 
 ---
 
@@ -249,15 +245,11 @@ services:
     plan: free
     region: frankfurt   # Change to your preferred region
     branch: main
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run build && npx prisma db push
     startCommand: npm start
     envVars:
       # Automatically wired from the database defined below
       - key: DATABASE_URL
-        fromDatabase:
-          name: oau-enviro-rank-db
-          property: connectionString
-      - key: DIRECT_URL
         fromDatabase:
           name: oau-enviro-rank-db
           property: connectionString
