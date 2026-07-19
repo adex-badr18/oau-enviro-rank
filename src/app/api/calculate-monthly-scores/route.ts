@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { calculateWeightedScore } from "@/lib/score-calculator";
-import { checkAuth } from "@/utils/supabase/check-auth";
+import { checkAuth } from "@/lib/check-auth";
 
 export const dynamic = "force-dynamic";
 

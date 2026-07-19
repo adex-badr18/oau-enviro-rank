@@ -1,6 +1,6 @@
 # 1. Base image with necessary build tools for compiling native dependencies
 FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat python3 make g++ sqlite-dev
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 # 2. Install dependencies based on package-lock.json
@@ -36,9 +36,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy schema and dev database (for local Docker testing/SQLite storage)
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/dev.db ./dev.db
+
 
 # Configure environment variables
 EXPOSE 3000

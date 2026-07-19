@@ -5,7 +5,7 @@ import {
   getPerformanceRating,
 } from "@/lib/score-calculator";
 import ExcelJS from "exceljs";
-import { checkAuth } from "@/utils/supabase/check-auth";
+import { checkAuth } from "@/lib/check-auth";
 
 export async function GET(request: NextRequest) {
   const auth = await checkAuth();

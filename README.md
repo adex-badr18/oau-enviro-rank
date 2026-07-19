@@ -31,6 +31,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Production Deployment
 
-This application is ready for production deployment utilizing a containerized structure optimized for **Google Cloud Run** and database integration with **Supabase (Managed PostgreSQL)**.
-
-For complete, step-by-step instructions on environment setup, database migration, container building, and secure secret management, see [DEPLOYMENT.md](file:///home/badrudeen/dev/ai-projects/oau-enviro-rank/DEPLOYMENT.md).
+This application is deployed on **Render** (free tier) using a **PostgreSQL** database. For complete, step-by-step instructions on environment setup, database migration, and secure secret management, see [DEPLOYMENT.md](./DEPLOYMENT.md).
