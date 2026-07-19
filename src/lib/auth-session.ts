@@ -1,6 +1,11 @@
 import crypto from "crypto";
 
-const SECRET = process.env.SESSION_SECRET || "fallback-secret-for-oau-enviro-rank-project-123456";
+const SECRET = process.env.SESSION_SECRET || "";
+
+// Throws an error if SESSION SECRET is missing
+if (!SECRET) {
+  throw new Error("FATAL: SESSION_SECRET environment variable is not set. The application cannot start securely.");
+}
 
 export interface SessionPayload {
   userId: string;
@@ -30,7 +35,7 @@ export function verifyToken(token: string): SessionPayload | null {
     if (parts.length !== 2) return null;
     const [data, hmac] = parts;
     const expectedHmac = crypto.createHmac("sha256", SECRET).update(data).digest("hex");
-    
+
     // Timing-safe verification of the signature
     const hmacBuf = Buffer.from(hmac, "hex");
     const expectedBuf = Buffer.from(expectedHmac, "hex");
