@@ -1,3 +1,4 @@
+import "dotenv/config"; // Load .env so DATABASE_URL is available when tsx runs outside Next.js
 import crypto from "crypto";
 import { prisma } from "../src/lib/db";
 import { hashPassword } from "../src/lib/auth-crypto";
