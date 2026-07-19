@@ -8,7 +8,7 @@ import {
   getPerformanceRating,
 } from "@/lib/score-calculator";
 import { z } from "zod";
-import { checkAuth } from "@/utils/supabase/check-auth";
+import { checkAuth } from "@/lib/check-auth";
 
 const InspectRequestSchema = z.object({
   facultyId: z.string().uuid("Invalid faculty ID format"),

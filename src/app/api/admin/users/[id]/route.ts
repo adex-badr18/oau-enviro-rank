@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { checkSuperadmin } from "@/utils/supabase/check-admin";
+import { checkSuperadmin } from "@/lib/check-admin";
 import { cookies } from "next/headers";
 import { verifyToken, signToken } from "@/lib/auth-session";
 import { hashPassword } from "@/lib/auth-crypto";

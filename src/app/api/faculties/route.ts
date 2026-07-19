@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { checkAuth } from "@/utils/supabase/check-auth";
+import { checkAuth } from "@/lib/check-auth";
 
 // Zod schema for validation
 const CreateFacultySchema = z.object({

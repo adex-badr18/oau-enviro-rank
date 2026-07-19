@@ -1,31 +1,61 @@
-# Production Deployment Guide: OAU Enviro Rank
+# Deployment Guide: OAU Enviro Rank on Render (Free Tier)
 
-This document outlines the Solutions Architecture and DevOps steps to transition the OAU Environmental Compliance and Cleanliness Assessment System from local development (SQLite) into a production-grade containerized environment utilizing **Supabase (Managed PostgreSQL)** and **Google Cloud Run**.
-
----
-
-## 1. Environment Variables Checklist
-
-Ensure these variables are configured in your Cloud Run service settings:
-
-| Variable | Description | Example / Format |
-| :--- | :--- | :--- |
-| `DATABASE_URL` | Connection pooling string for Supabase database (transaction mode). | `postgres://postgres.xxxx:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
-| `DIRECT_URL` | Direct connection string for Supabase database (session mode). Used for migrations. | `postgres://postgres.xxxx:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:5432/postgres` |
-| `NEXT_PUBLIC_APP_URL` | Public production domain where this application is hosted (e.g. your Cloud Run URL). | `https://oau-enviro-rank-xxxxxx-uc.a.run.app` |
-| `NODE_ENV` | Target environment. | `production` |
+This document is a complete, step-by-step guide for deploying the OAU Environmental Compliance and Cleanliness Assessment System to **Render.com** using its free tier. The app uses **Next.js 16** with **Prisma 7** and a **PostgreSQL** database for both local development and production.
 
 ---
 
-## 2. Transitioning Prisma to Supabase (PostgreSQL)
+> [!IMPORTANT]
+> **Free Tier Limitations** — Be aware of these constraints before deploying:
+> - **Web Service:** Spins down after **15 minutes of inactivity**. The next request will experience a **30–60 second cold start** delay.
+> - **PostgreSQL Database:** Free databases **expire after 30 days** and are limited to **1 GB of storage**. They are suitable for demos and prototypes. Upgrade to a paid plan for long-term persistence.
 
-Prisma does not support dynamic database providers (e.g. SQLite and PostgreSQL at the same time in one configuration). Follow these steps to transition:
+---
 
-### Step A: Update `prisma/schema.prisma`
-Modify the `datasource db` block in `prisma/schema.prisma` (lines 8-10) to use the `postgresql` provider and point to `DATABASE_URL` and `DIRECT_URL`:
+## Table of Contents
 
+1. [Prerequisites](#1-prerequisites)
+2. [Required Codebase Modifications](#2-required-codebase-modifications)
+3. [Provision a Free PostgreSQL Database on Render](#3-provision-a-free-postgresql-database-on-render)
+4. [Create and Configure the Web Service](#4-create-and-configure-the-web-service)
+5. [Set Environment Variables Securely](#5-set-environment-variables-securely)
+6. [Configure the Build Pipeline](#6-configure-the-build-pipeline)
+7. [Run Database Migrations and Seed](#7-run-database-migrations-and-seed)
+8. [Using `render.yaml` (Infrastructure as Code — Optional but Recommended)](#8-using-renderyaml-infrastructure-as-code--optional-but-recommended)
+9. [Security Checklist](#9-security-checklist)
+10. [Post-Deployment Verification](#10-post-deployment-verification)
+11. [Environment Variables Reference](#11-environment-variables-reference)
+
+---
+
+## 1. Prerequisites
+
+Before you begin, ensure the following are in place:
+
+- [ ] A **GitHub or GitLab account** with this repository pushed and up to date.
+- [ ] A **Render account** — sign up for free at [render.com](https://render.com).
+- [ ] The `.env` file is listed in `.gitignore` (it already is — **never commit it**).
+
+---
+
+## 2. Required Codebase Modifications
+
+The following changes must be made to your local codebase before pushing to deploy. **Commit and push these changes to your repository.**
+
+---
+
+### 2.1 — `prisma/schema.prisma`: Add `DATABASE_URL` env reference
+
+The current `datasource db` block is missing the `url` field pointing to an environment variable. Without it, Prisma cannot connect at runtime on Render.
+
+**Current state (`prisma/schema.prisma`, lines 8–10):**
 ```prisma
-// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+}
+```
+
+**Change it to:**
+```prisma
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
@@ -33,128 +63,270 @@ datasource db {
 }
 ```
 
-### Step B: Generate the Prisma Client
-Run the following command to rebuild the Prisma client with PostgreSQL drivers:
-```bash
-npx prisma generate
+> The `directUrl` is used by the Prisma CLI for migrations and seeding. The `url` is used by the application at runtime.
+
+---
+
+### 2.2 — `src/lib/auth-session.ts`: Enforce `SESSION_SECRET` at runtime
+
+The current session signing code falls back to a hardcoded string if `SESSION_SECRET` is not set:
+
+```typescript
+// Current (insecure fallback)
+const SECRET = process.env.SESSION_SECRET || "fallback-secret-for-oau-enviro-rank-project-123456";
 ```
 
-### Step C: Push Schema to Supabase
-Run the database schema push command to sync the models and relations to your Supabase instance:
+**Replace this line with a hard failure** so the app refuses to start without a proper secret:
+
+```typescript
+// Secure — throws at startup if SESSION_SECRET is missing
+const SECRET = process.env.SESSION_SECRET;
+if (!SECRET) {
+  throw new Error("FATAL: SESSION_SECRET environment variable is not set. The application cannot start securely.");
+}
+```
+
+---
+
+### 2.3 — `next.config.ts`: Confirm `standalone` output (Already correct ✅)
+
+Your `next.config.ts` already has `output: "standalone"` — **no change needed**.
+
+---
+
+### 2.4 — `package.json`: Confirm build script (Already correct ✅)
+
+The `build` script already runs `prisma generate && next build` — **no change needed**.
+
+---
+
+## 3. Provision a Free PostgreSQL Database on Render
+
+1. Log in to [dashboard.render.com](https://dashboard.render.com).
+2. Click **New +** → **PostgreSQL**.
+3. Fill in the form:
+   - **Name:** `oau-enviro-rank-db`
+   - **Database Name:** `oau_enviro_rank`
+   - **User:** `oau_admin`
+   - **Region:** Choose the region closest to your users (e.g., **Frankfurt EU Central** for Nigeria proximity).
+   - **Plan:** Select **Free**.
+4. Click **Create Database**.
+5. On the database detail page, note the following (you will need them in Step 5):
+   - **Internal Database URL** — used as `DATABASE_URL` at runtime (within Render's private network).
+   - **External Database URL** — used as `DIRECT_URL` for running migrations.
+
+> [!WARNING]
+> The free database **expires in 30 days**. Render will email you before expiry. Upgrade to a paid plan or migrate your data to avoid data loss.
+
+---
+
+## 4. Create and Configure the Web Service
+
+### 4.1 Connect your Repository
+
+1. In the Render Dashboard, click **New +** → **Web Service**.
+2. Click **Connect a repository** and authorize Render to access your GitHub/GitLab account.
+3. Select the `oau-enviro-rank` repository.
+4. Click **Connect**.
+
+### 4.2 Configure the Web Service
+
+Fill in the service configuration form:
+
+| Field | Value |
+| :--- | :--- |
+| **Name** | `oau-enviro-rank` |
+| **Region** | Same region as your database (e.g., Frankfurt) |
+| **Branch** | `main` (or your production branch) |
+| **Runtime** | **Node** |
+| **Build Command** | `npm install && npm run build` |
+| **Start Command** | `npm start` |
+| **Plan** | **Free** |
+
+---
+
+## 5. Set Environment Variables Securely
+
+> [!CAUTION]
+> **Never hardcode secrets in `render.yaml` or commit them to Git.** Use Render's dashboard to set sensitive values. Variables set in the dashboard take precedence over those in `render.yaml`.
+
+### 5.1 Set Variables in the Render Dashboard
+
+Navigate to your Web Service → **Environment** tab → **Add Environment Variable**. Add each variable below:
+
+| Variable | Value | Notes |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | Internal Database URL from Step 3 | Used by the app at runtime |
+| `DIRECT_URL` | External Database URL from Step 3 | Used by Prisma CLI for migrations |
+| `SESSION_SECRET` | A long, random string (64 chars) | Signs auth session tokens — **generate with `openssl rand -hex 32`** |
+| `NEXT_PUBLIC_APP_URL` | `https://oau-enviro-rank.onrender.com` | Your Render service URL (set after first deploy) |
+| `NODE_ENV` | `production` | Instructs Next.js and Prisma to use production paths |
+
+> [!TIP]
+> To generate a secure `SESSION_SECRET`, run this command in your terminal:
+> ```bash
+> openssl rand -hex 32
+> ```
+> Copy the 64-character hex output and paste it as the value in the Render dashboard.
+
+### 5.2 `NEXT_PUBLIC_` Prefix Security Rule
+
+- Variables prefixed with `NEXT_PUBLIC_` are **bundled into the client-side JavaScript** and visible to all users in their browser.
+- **Never** put `DATABASE_URL`, `SESSION_SECRET`, or any passwords under `NEXT_PUBLIC_`.
+
+---
+
+## 6. Configure the Build Pipeline
+
+Render's Node runtime will automatically run your build script on every push:
+
+- **Build Command:** `npm install && npm run build`
+  - This runs `prisma generate` (from your `package.json` build script) then `next build`.
+- **Start Command:** `npm start`
+  - This runs `next start` which serves the standalone `.next` output.
+
+> [!NOTE]
+> Render caches `node_modules` between builds to speed up subsequent deploys. If you add new dependencies, it automatically reinstalls them.
+
+---
+
+## 7. Run Database Migrations and Seed
+
+After the first successful deployment, you need to push the Prisma schema and seed the database.
+
+### 7.1 Using the Render Shell (Recommended)
+
+1. In the Render Dashboard, navigate to your Web Service.
+2. Click the **Shell** tab.
+3. Run the following commands **in order**:
+
 ```bash
+# Step 1: Push the Prisma schema to create all tables
 npx prisma db push
-```
 
-### Step D: Seed the Production Database
-Run the seed script to populate default OAU faculties and set up the active assessment period (June 2026):
-```bash
+# Step 2: Seed the database with OAU faculties and the active assessment period
 npx tsx prisma/seed.ts
 ```
 
-*Note: The project's database client (`src/lib/db.ts`) will automatically recognize the PostgreSQL connection string and bypass SQLite.*
+### 7.2 Running Migrations Locally Against the Render Database
+
+You can also run migrations from your local machine using the **External Database URL**:
+
+```bash
+# Replace with your actual Render External Database URL
+DATABASE_URL="postgresql://oau_admin:YOURPASSWORD@oregon-postgres.render.com:5432/oau_enviro_rank" \
+DIRECT_URL="postgresql://oau_admin:YOURPASSWORD@oregon-postgres.render.com:5432/oau_enviro_rank" \
+npx prisma db push
+
+# Then seed
+DATABASE_URL="postgresql://oau_admin:YOURPASSWORD@oregon-postgres.render.com:5432/oau_enviro_rank" \
+npx tsx prisma/seed.ts
+```
+
+> [!IMPORTANT]
+> Use the **External Database URL** (not the internal one) when connecting from your local machine.
 
 ---
 
-## 3. Google Cloud Run Deployment Guide
+## 8. Using `render.yaml` (Infrastructure as Code — Optional but Recommended)
 
-Google Cloud Run is a fully managed compute platform that automatically scales your stateless containers. Since our project includes a multi-stage `Dockerfile` configured for Next.js standalone builds, it is perfectly suited for deployment to Cloud Run.
+Create the file `render.yaml` in the project root:
 
-### Prerequisites & Initial Setup
+```yaml
+# render.yaml — Render Blueprint for OAU Enviro Rank
+# https://render.com/docs/blueprint-spec
 
-1. **Install Google Cloud SDK**: Ensure the `gcloud` CLI is installed and authenticated on your local machine.
-2. **Select GCP Project**:
-   ```bash
-   gcloud config set project [YOUR_PROJECT_ID]
-   ```
-3. **Enable Required APIs**: Enable the Cloud Run, Artifact Registry, and Cloud Build APIs:
-   ```bash
-   gcloud services enable run.googleapis.com \
-                          artifactregistry.googleapis.com \
-                          cloudbuild.googleapis.com
-   ```
+services:
+  - type: web
+    name: oau-enviro-rank
+    runtime: node
+    plan: free
+    region: frankfurt   # Change to your preferred region
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      # Automatically wired from the database defined below
+      - key: DATABASE_URL
+        fromDatabase:
+          name: oau-enviro-rank-db
+          property: connectionString
+      - key: DIRECT_URL
+        fromDatabase:
+          name: oau-enviro-rank-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      # sync: false means Render will NOT overwrite values you set manually in the Dashboard.
+      # Set these sensitive values directly in the Render Dashboard.
+      - key: SESSION_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+
+databases:
+  - name: oau-enviro-rank-db
+    plan: free
+    region: frankfurt   # Must match the web service region
+    databaseName: oau_enviro_rank
+    user: oau_admin
+```
+
+### Deploying via Blueprint
+
+1. Push `render.yaml` to your repository.
+2. Go to [dashboard.render.com](https://dashboard.render.com) → **New +** → **Blueprint**.
+3. Connect your repository.
+4. Render will auto-detect `render.yaml` and show a preview of all resources it will create.
+5. Click **Apply**. Render provisions both the database and the web service automatically.
+6. After provisioning, go to your Web Service → **Environment** tab and manually set all variables marked `sync: false`.
+7. Trigger a new deploy from the **Deploys** tab so the new environment values take effect.
+
+> [!WARNING]
+> Do **not** put actual secret values inside `render.yaml` — this file is committed to Git. The `sync: false` pattern instructs Render to leave the value as-is if it was manually set in the dashboard.
 
 ---
 
-### Option A: Direct Source Deployment (Simplest & Recommended)
+## 9. Security Checklist
 
-This method uses Cloud Build to package your application and deploy it directly to Cloud Run in a single command. It reads your local `Dockerfile` and builds the image automatically without needing a manual registry push.
-
-Run the following command in the project root:
-
-```bash
-gcloud run deploy oau-enviro-rank \
-  --source . \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars DATABASE_URL="[YOUR_SUPABASE_TRANSACTION_CONNECTION_STRING]",DIRECT_URL="[YOUR_SUPABASE_SESSION_CONNECTION_STRING]",NEXT_PUBLIC_APP_URL="[YOUR_CLOUD_RUN_URL]"
-```
-
-*Note: You can omit `NEXT_PUBLIC_APP_URL` on the first deploy, copy the service URL from the command output, and then redeploy with the `NEXT_PUBLIC_APP_URL` set.*
+| # | Item | Status |
+| :--- | :--- | :--- |
+| 1 | `.env` is in `.gitignore` | ✅ Already done |
+| 2 | `SESSION_SECRET` is a strong 64-char random string set only in the Render Dashboard | ⬜ Do this |
+| 3 | `DATABASE_URL` is set only in the Render Dashboard (not as a plain value in `render.yaml`) | ⬜ Do this |
+| 4 | `prisma/schema.prisma` `datasource db` block points to `env("DATABASE_URL")` | ⬜ Apply change from §2.1 |
+| 5 | `src/lib/auth-session.ts` throws a fatal error if `SESSION_SECRET` is missing | ⬜ Apply change from §2.2 |
+| 6 | `BYPASS_AUTH_FOR_TEST` is **not** set in the Render Environment tab | ⬜ Verify this |
+| 7 | `NODE_ENV` is set to `production` in the Render Environment tab | ⬜ Do this |
+| 8 | All admin routes are protected by the middleware in `src/proxy.ts` | ✅ Already done |
 
 ---
 
-### Option B: Deploying via Artifact Registry & Cloud Build (Structured)
+## 10. Post-Deployment Verification
 
-For team environments or structured CI/CD pipelines, you can build and publish the Docker container to Google Artifact Registry first, and then run it.
+Once Render completes the deployment and your service URL is live (e.g., `https://oau-enviro-rank.onrender.com`), perform these checks:
 
-#### Step 1: Create a Docker Artifact Registry Repository
-```bash
-gcloud artifacts repositories create oau-enviro-rank-repo \
-  --repository-format=docker \
-  --location=us-central1 \
-  --description="Docker repository for OAU Enviro Rank"
-```
-
-#### Step 2: Build and Tag the Image using Cloud Build
-```bash
-gcloud builds submit --tag us-central1-docker.pkg.dev/[YOUR_PROJECT_ID]/oau-enviro-rank-repo/oau-enviro-rank:latest .
-```
-
-#### Step 3: Deploy the Container Image to Cloud Run
-```bash
-gcloud run deploy oau-enviro-rank \
-  --image us-central1-docker.pkg.dev/[YOUR_PROJECT_ID]/oau-enviro-rank-repo/oau-enviro-rank:latest \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars DATABASE_URL="[YOUR_SUPABASE_TRANSACTION_CONNECTION_STRING]",DIRECT_URL="[YOUR_SUPABASE_SESSION_CONNECTION_STRING]",NEXT_PUBLIC_APP_URL="[YOUR_CLOUD_RUN_URL]"
-```
+1. **Landing Page**: Visit the root URL `/`. Verify the faculty leaderboard loads with seeded data.
+2. **Survey Form**: Visit `/survey` on a mobile browser. Confirm the form renders correctly and a submission can be completed end-to-end.
+3. **Admin Login**: Visit `/login`. Log in using the superadmin credentials you seeded. Verify you are redirected to `/admin/dashboard`.
+4. **Admin Dashboard**: Confirm inspection scores, faculty management, and user management pages load without errors.
+5. **Unauthorized Access**: Log out and try to access `/admin/dashboard` directly. Confirm you are redirected to `/login`.
+6. **API Security**: Make a `curl` or Postman request to `POST /api/admin/users` without a valid session cookie. Confirm a `401 Unauthorized` response is returned.
+7. **Environment Variable Leak Test**: Open browser DevTools → **Sources** and search for `SESSION_SECRET` or `DATABASE_URL` in the page source. These must **not** appear anywhere.
 
 ---
 
-### Security Best Practice: Using GCP Secret Manager for Environment Variables
+## 11. Environment Variables Reference
 
-Instead of passing secrets like database credentials directly in plain-text environment variables, use **Secret Manager**:
+| Variable | Scope | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `DATABASE_URL` | Server-only | ✅ Yes | PostgreSQL connection string used by the app at runtime. |
+| `DIRECT_URL` | Server-only | ✅ Yes | Direct PostgreSQL connection string used by Prisma CLI for migrations. |
+| `SESSION_SECRET` | Server-only | ✅ Yes | HMAC-SHA256 signing key for session tokens. Min 64 chars. **Never** expose client-side. |
+| `NODE_ENV` | Server-only | ✅ Yes | Set to `production` on Render. Controls Next.js build mode. |
+| `NEXT_PUBLIC_APP_URL` | Client + Server | ✅ Yes | The full public URL of the deployed app. Used for absolute URL construction. |
+| `BYPASS_AUTH_FOR_TEST` | Server-only | ❌ Never in prod | Development/testing flag that disables authentication middleware. Must be absent or `false`. |
 
-1. **Create the Secrets**:
-   ```bash
-   echo -n "YOUR_DATABASE_URL" | gcloud secrets create DB_URL_SECRET --data-file=-
-   echo -n "YOUR_DIRECT_URL" | gcloud secrets create DIRECT_URL_SECRET --data-file=-
-   ```
-2. **Grant Secret Access Permission**:
-   Cloud Run uses the Compute Engine Default Service Account (`[PROJECT_NUMBER]-compute@developer.gserviceaccount.com`) by default. Grant it accessor permission:
-   ```bash
-   gcloud secrets add-iam-policy-binding DB_URL_SECRET \
-     --member="serviceAccount:[PROJECT_NUMBER]-compute@developer.gserviceaccount.com" \
-     --role="roles/secretmanager.secretAccessor"
+---
 
-   gcloud secrets add-iam-policy-binding DIRECT_URL_SECRET \
-     --member="serviceAccount:[PROJECT_NUMBER]-compute@developer.gserviceaccount.com" \
-     --role="roles/secretmanager.secretAccessor"
-   ```
-3. **Deploy Reference to Secrets**:
-   ```bash
-   gcloud run deploy oau-enviro-rank \
-     --source . \
-     --region us-central1 \
-     --allow-unauthenticated \
-     --set-secrets=DATABASE_URL=DB_URL_SECRET:latest,DIRECT_URL=DIRECT_URL_SECRET:latest \
-     --set-env-vars NEXT_PUBLIC_APP_URL="[YOUR_CLOUD_RUN_URL]"
-   ```
-
-## 4. Verification in Production
-
-Once the deployment completes and your testing URL is generated, perform these verification checks:
-1. Load the landing page URL and verify that the stats display correctly.
-2. Confirm the active period is set to "June 2026" (or the seeded period).
-3. Access `/survey` on a mobile browser to verify forms load smoothly.
-4. Submit a survey and check that the landing page leaderboard updates the faculty rankings instantly without manual refresh.
+*Last updated: July 2026 | Target Platform: Render Free Tier | Stack: Next.js 16 · Prisma 7 · PostgreSQL*

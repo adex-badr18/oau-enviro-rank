@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getPerformanceRating } from "@/lib/score-calculator";
 import { ensureCurrentPeriodActive } from "@/lib/assessment-period";
-import { checkAuth } from "@/utils/supabase/check-auth";
+import { checkAuth } from "@/lib/check-auth";
 
 // Disable static optimization for this API to ensure real-time data
 export const dynamic = "force-dynamic";

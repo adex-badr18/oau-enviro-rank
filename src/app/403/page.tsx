@@ -3,15 +3,13 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, ArrowLeft, LogOut, Home } from "lucide-react";
-import { createClient } from "@/utils/supabase/client";
 import BackButton from "@/components/BackButton";
 
 export default function ForbiddenPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const handleLogoutAndRedirect = async () => {
-    await supabase.auth.signOut();
+    await fetch("/api/auth", { method: "DELETE" });
     window.location.href = "/login";
   };
 

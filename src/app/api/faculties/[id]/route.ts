@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { checkAuth } from "@/utils/supabase/check-auth";
+import { checkAuth } from "@/lib/check-auth";
 
 const UpdateFacultySchema = z.object({
   name: z.string().min(2, "Faculty name must be at least 2 characters").optional(),
