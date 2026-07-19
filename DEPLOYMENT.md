@@ -91,6 +91,24 @@ The `build` script already runs `prisma generate && next build` — **no change 
 
 ---
 
+### 2.5 — `.npmrc`: Force devDependency installation on Render
+
+> [!IMPORTANT]
+> **This is the most common cause of Render build failures for Next.js + Tailwind projects.** Render sets `NODE_ENV=production` during the build phase. By default, this causes `npm install` to silently skip all `devDependencies` — including `@tailwindcss/postcss` and `tailwindcss`, which are required to compile `globals.css` at build time.
+
+Create a `.npmrc` file in the project root with the following content:
+
+```ini
+# .npmrc
+# Force npm to install devDependencies even when NODE_ENV=production.
+# Required for Render builds where CSS build tools live in devDependencies.
+production=false
+```
+
+This file is already committed to the repository — **no action needed**.
+
+---
+
 ## 3. Provision a Free PostgreSQL Database on Render
 
 1. Log in to [dashboard.render.com](https://dashboard.render.com).
@@ -102,9 +120,7 @@ The `build` script already runs `prisma generate && next build` — **no change 
    - **Region:** Choose the region closest to your users (e.g., **Frankfurt EU Central** for Nigeria proximity).
    - **Plan:** Select **Free**.
 4. Click **Create Database**.
-5. On the database detail page, note the following (you will need them in Step 5):
-   - **Internal Database URL** — used as `DATABASE_URL` at runtime (within Render's private network).
-   - **External Database URL** — used as `DIRECT_URL` for running migrations.
+5. On the database detail page, note the **Internal Database URL** — you will use this as `DATABASE_URL` in Step 5.
 
 > [!WARNING]
 > The free database **expires in 30 days**. Render will email you before expiry. Upgrade to a paid plan or migrate your data to avoid data loss.
