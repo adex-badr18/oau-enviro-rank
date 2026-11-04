@@ -90,8 +90,11 @@ async function main() {
   console.log("Seeding started...");
 
   // ── Seed Superadmin ──────────────────────────────────────────────────────
-  const superadminEmail = "envirorank-admin@oauife.edu.ng";
-  const superadminPassword = "password123";
+  // const superadminEmail = "envirorank-admin@oauife.edu.ng";
+  // const superadminPassword = "password123";
+
+  const superadminEmail = process.env.SUPERADMIN_EMAIL;
+  const superadminPassword = process.env.SUPERADMIN_PASSWORD;
 
   const existingSuperadmin = await prisma.profile.findFirst({
     where: { role: "superadmin" },
@@ -102,7 +105,7 @@ async function main() {
       where: { id: existingSuperadmin.id },
       data: {
         email: superadminEmail,
-        passwordHash: hashPassword(superadminPassword),
+        passwordHash: hashPassword(superadminPassword ?? ""),
         isActive: true,
       },
     });
@@ -111,8 +114,8 @@ async function main() {
     await prisma.profile.create({
       data: {
         id: crypto.randomUUID(),
-        email: superadminEmail,
-        passwordHash: hashPassword(superadminPassword),
+        email: superadminEmail ?? "",
+        passwordHash: hashPassword(superadminPassword ?? ""),
         role: "superadmin",
         isActive: true,
       },
